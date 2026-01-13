@@ -11,6 +11,7 @@ struct AuthView: View {
     @State private var username = ""
     @State private var password = ""
     @State private var confirmPassword = ""
+    @Binding var isAuthed: Bool
     
     var body: some View {
         VStack(){
@@ -30,11 +31,23 @@ struct AuthView: View {
             
             Button("Sign up"){
                 
+            }.buttonStyle(.borderedProminent)
+            
+            Button("Guest Access(No login)"){
+                isAuthed = true
             }
-        }
+            
+        }.padding()
     }
 }
 
 #Preview {
-    AuthView()
+    AuthPreviewWrapper()
+}
+
+private struct AuthPreviewWrapper: View {
+    @State private var isAuthed = false
+    var body: some View {
+        AuthView(isAuthed: $isAuthed)
+    }
 }
