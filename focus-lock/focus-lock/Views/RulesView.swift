@@ -9,8 +9,28 @@ import SwiftUI
 
 struct RulesView: View {
     var body: some View {
-        VStack(alignment: .leading, spacing: 100) {
-            Text("Rules").font(.title)
+        VStack(alignment: .leading, spacing: 50) {
+            Text("Rules")
+                .font(.title)
+                .frame(maxWidth: .infinity, alignment: .center)
+            
+            Button {
+                
+            } label : {
+                Text("Create Rule")
+                    .frame(width: 100, height:50)
+                    .bold()
+                    .foregroundColor(.black)
+                
+                    .background {
+                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    }
+            }
+            .frame(maxWidth: .infinity, alignment: .trailing)
+            
+            
+            
+            
             
             ScrollView(.vertical, showsIndicators: false) {
                 LazyVStack(alignment:.leading, spacing: 16) {
