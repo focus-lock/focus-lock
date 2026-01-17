@@ -67,22 +67,10 @@ struct HomeView: View {
                 
                 Spacer()
                 
-                NavigationLink {
-                    RulesView()
-                } label: {
-                    Text("Rules")
-                        .bold()
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.primaryFocus)
-                .frame(maxWidth: .infinity, alignment: .center)
-                
-                
-            }
-            .padding()
-        }
+            }.padding()
         }
     }
+}
 
 #Preview {
     HomeView()

@@ -8,28 +8,19 @@
 import SwiftUI
 
 struct RulesView: View {
+    
+    @State private var goToBlocked = false
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 50) {
             Text("Rules")
                 .font(.title)
                 .frame(maxWidth: .infinity, alignment: .center)
             
-            Button {
+            
+            FocusCompactButton(title: "Create Rule"){
                 
-            } label : {
-                Text("Create Rule")
-                    .frame(width: 100, height:50)
-                    .bold()
-                    .foregroundColor(.black)
-                
-                    .background {
-                        RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    }
-            }
-            .frame(maxWidth: .infinity, alignment: .trailing)
-            
-            
-            
+            }.frame(maxWidth: .infinity, alignment: .trailing)
             
             
             ScrollView(.vertical, showsIndicators: false) {
@@ -43,10 +34,20 @@ struct RulesView: View {
                     
                 }
             }
+            
+            FocusButton(title: "Blocked Screen") {
+                goToBlocked = true
+            }
         }.padding(20)
+        .navigationDestination(isPresented: $goToBlocked) {
+            BlockedView()
+        }
     }
+    
 }
 
 #Preview {
-    RulesView()
+    NavigationStack {
+            RulesView()
+        }
 }

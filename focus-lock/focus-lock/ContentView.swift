@@ -9,18 +9,31 @@ import SwiftUI
 
 struct ContentView: View {
     @State private var isAuthed = false
-    
+
     var body: some View {
-        if isAuthed{
-            NavigationStack{
-                HomeView()
+        if isAuthed {
+            TabView {
+                NavigationStack {
+                    HomeView()
+                }
+                .tabItem {
+                    Label("Home", systemImage: "house")
+                }
+
+                NavigationStack {
+                    RulesView()
+                }
+                .tabItem {
+                    Label("Rules", systemImage: "book.closed")
+                }
             }
-        }
-        else {
+        } else {
             AuthView(isAuthed: $isAuthed)
         }
     }
 }
+
+
 
 #Preview {
     ContentView()
