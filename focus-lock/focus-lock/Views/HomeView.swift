@@ -9,7 +9,7 @@ import SwiftUI
 
 struct HomeView: View {
     
-    @State private var HomeRulePath = NavigationPath()
+    @EnvironmentObject var appState: AppState // Shared app state injected from ContentView
     
     
     var body: some View {
@@ -32,10 +32,10 @@ struct HomeView: View {
                     .font(.title2)
                     .bold()
                 
-                Text("Money Lost: $15")
+                Text("Money Lost: \(appState.formattedMoney(appState.moneyLostToday))") // Read today's money lost from shared state
                     .foregroundColor(.red)
                 
-                Text("Minutes Wasted: 15 minutes")
+                Text("Minutes Wasted: \(appState.minutesWastedToday) minutes") // Read today's minutes wasted from shared state
                     .foregroundColor(.orange)
                 
                 Divider()
@@ -45,10 +45,10 @@ struct HomeView: View {
                     .font(.title2)
                     .bold()
                 
-                Text("Money Lost: $100")
+                Text("Money Lost: \(appState.formattedMoney(appState.moneyLostThisWeek))") // Weekly money lost from state
                     .foregroundColor(.red)
                 
-                Text("Minutes Wasted: 35 minutes")
+                Text("Minutes Wasted: \(appState.minutesWastedThisWeek) minutes") // Weekly minutes wasted from state
                     .foregroundColor(.orange)
                 
                 Divider()
@@ -57,10 +57,10 @@ struct HomeView: View {
                     .font(.title2)
                     .bold()
                 
-                Text("Money Lost: $500")
+                Text("Money Lost: \(appState.formattedMoney(appState.moneyLostLifetime))") // Lifetime money lost from state
                     .foregroundColor(.red)
                 
-                Text("Minutes Wasted: 5 hours")
+                Text("Minutes Wasted: \(appState.lifetimeHours) hours") // Lifetime hours derived from minutes in state
                     .foregroundColor(.orange)
                 
                     
@@ -74,4 +74,5 @@ struct HomeView: View {
 
 #Preview {
     HomeView()
+        .environmentObject(AppState()) // Provide preview AppState so @EnvironmentObject resolves
 }
