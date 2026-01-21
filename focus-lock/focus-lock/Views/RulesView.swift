@@ -9,6 +9,9 @@ import SwiftUI
 
 struct RulesView: View {
     
+    // New State to track if the sheet(rule add modal) is open
+    @State private var showCreateSheet = false
+    
     @State private var goToBlocked = false
     
     @EnvironmentObject var appState: AppState
@@ -22,8 +25,15 @@ struct RulesView: View {
             
             
             FocusCompactButton(title: "Create Rule"){
-                appState.rules.append(Rule(title: "New Rule \(appState.rules.count + 1)", isEnabled: true))
-            }.frame(maxWidth: .infinity, alignment: .trailing)
+                // flipping this to true.
+                // the .sheet modifier below watches this switch
+                showCreateSheet = true
+            }
+            .frame(maxWidth: .infinity, alignment: .trailing)
+            // when showCreateSheet becomes true, it presents the view
+            .sheet(isPresented: $showCreateSheet){
+                CreateRuleView()
+            }
             
             
             ScrollView(.vertical, showsIndicators: false) {
@@ -40,8 +50,9 @@ struct RulesView: View {
                                     .foregroundStyle(rule.isEnabled ? .green : .red)
                                 
                             }
-                            Text(rule.isEnabled ? "Enabled" : "Disabled")
-                                .foregroundStyle(.secondary)
+                            Text("\(rule.startTime, style: .time) - \(rule.endTime, style: .time)")
+                                .font(.subheadline)
+                                .foregroundStyle(.gray)
                         }
                         Divider()
                     }

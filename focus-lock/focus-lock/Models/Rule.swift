@@ -12,4 +12,6 @@ struct Rule: Identifiable, Hashable, Codable {
     var title: String
     var isEnabled: Bool
     var createdAt: Date = Date()
+    var startTime: Date = Calendar.current.date(from: .init(hour: 9, minute: 0))!
+    var endTime: Date = Calendar.current.date(from: .init(hour: 17, minute: 0))!
 }

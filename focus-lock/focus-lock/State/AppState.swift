@@ -23,6 +23,21 @@ final class AppState: ObservableObject {
         }
     }
     
+    // MARK: - Actions
+    
+    // Encapsulation: The View shouldn't know HOW to append a rule, just that it WANTS to add one.
+    // We now include start and end times in the creation.
+    func addRule(title: String, start: Date, end: Date){
+        let newRule = Rule(
+            title: title,
+            isEnabled: true,
+            startTime: start,
+            endTime: end
+        )
+        rules.append(newRule)
+        // Note: saveRules() is called automatically because of 'didSet' on the 'rules' variable.
+    }
+    
     // Sets initial state of rules
     init () {
         rules = loadRules()
