@@ -39,16 +39,20 @@ struct RulesView: View {
             ScrollView(.vertical, showsIndicators: false) {
                 LazyVStack(alignment:.leading, spacing: 16) {
                     
-                    ForEach(appState.rules){ rule in
+                    ForEach($appState.rules){ $rule in
                         VStack(alignment: .leading, spacing: 4){
                             HStack{
                                 Text(rule.title)
                                     .font(.title2)
                                     .bold()
                                 Spacer()
+                                
                                 Image(systemName: rule.isEnabled ? "checkmark.circle.fill" : "xmark.circle.fill")
                                     .foregroundStyle(rule.isEnabled ? .green : .red)
-                                
+                                    .font(.title2)
+                                    .onTapGesture {
+                                        rule.isEnabled.toggle()
+                                    }
                             }
                             Text("\(rule.startTime, style: .time) - \(rule.endTime, style: .time)")
                                 .font(.subheadline)
