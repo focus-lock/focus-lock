@@ -38,7 +38,7 @@ struct RulesView: View {
             
             ScrollView(.vertical, showsIndicators: false) {
                 LazyVStack(alignment:.leading, spacing: 16) {
-                    
+    
                     ForEach($appState.rules){ $rule in
                         VStack(alignment: .leading, spacing: 4){
                             HStack{
@@ -53,6 +53,16 @@ struct RulesView: View {
                                     .onTapGesture {
                                         rule.isEnabled.toggle()
                                     }
+                                
+                                Button(action:{
+                                    
+                                    appState.deleteRule(id:rule.id)
+                                }){
+                                    Image(systemName: "trash")
+                                        .foregroundStyle(.red)
+                                        .font(.title2)
+                                }
+                                .buttonStyle(BorderlessButtonStyle())
                             }
                             Text("\(rule.startTime, style: .time) - \(rule.endTime, style: .time)")
                                 .font(.subheadline)

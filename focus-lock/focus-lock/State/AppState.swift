@@ -85,6 +85,12 @@ final class AppState: ObservableObject {
         }
     }
     
+    func deleteRule(id:UUID){
+        rules.removeAll(){
+            $0.id == id
+        }
+    }
+    
     
     
     // MARK: - Stats (data for the Home screen)
