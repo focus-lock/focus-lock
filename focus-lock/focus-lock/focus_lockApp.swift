@@ -9,9 +9,18 @@ import SwiftUI
 
 @main
 struct focus_lockApp: App {
+    
+    // 1. Create the state object
+    @StateObject var familyControlsManager = FamilyControlsManager.shared
     var body: some Scene {
         WindowGroup {
             ContentView()
+            
+            // 2. Start the check when the app launches
+                .task {
+                    await familyControlsManager.requestAuthorization()
+                }
+            
         }
     }
 }
