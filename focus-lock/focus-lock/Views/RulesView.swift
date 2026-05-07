@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import FamilyControls
 
 struct RulesView: View {
     
@@ -67,6 +68,10 @@ struct RulesView: View {
                             Text("\(rule.startTime, style: .time) - \(rule.endTime, style: .time)")
                                 .font(.subheadline)
                                 .foregroundStyle(.gray)
+                            
+                            Text("\(rule.activitySelection.applicationTokens.count) app(s) selected")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                         }
                         Divider()
                     }

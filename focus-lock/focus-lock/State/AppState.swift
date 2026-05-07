@@ -8,6 +8,7 @@
 
 import SwiftUI
 import Combine
+import FamilyControls
 
 @MainActor
 final class AppState: ObservableObject {
@@ -27,12 +28,13 @@ final class AppState: ObservableObject {
     
     // Encapsulation: The View shouldn't know HOW to append a rule, just that it WANTS to add one.
     // We now include start and end times in the creation.
-    func addRule(title: String, start: Date, end: Date){
+    func addRule(title: String, start: Date, end: Date, activitySelection: FamilyActivitySelection){
         let newRule = Rule(
             title: title,
             isEnabled: true,
             startTime: start,
-            endTime: end
+            endTime: end,
+            activitySelection: activitySelection
         )
         rules.append(newRule)
         // Note: saveRules() is called automatically because of 'didSet' on the 'rules' variable.
