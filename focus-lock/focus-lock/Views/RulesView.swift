@@ -75,7 +75,7 @@ struct RulesView: View {
                         }
                         Divider()
                     }
-                    
+                    git
                 }
             }
             
