@@ -1,0 +1,19 @@
+# macOS
+.DS_Store
+
+# Xcode user-specific state
+xcuserdata/
+*.xcuserstate
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+
+# Xcode and Swift build output
+DerivedData/
+.build/
+Packages/
+Package.resolved
+
+# Local environment files
+.env
+.env.*
+*.local
