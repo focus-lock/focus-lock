@@ -52,8 +52,10 @@ struct RulesView: View {
                                     .foregroundStyle(rule.isEnabled ? .green : .red)
                                     .font(.title2)
                                     .onTapGesture {
-                                        rule.isEnabled.toggle()
+                                        // Toggle through AppState so the actual Screen Time shield updates too.
+                                        appState.toggleRule(id: rule.id)
                                     }
+
                                 
                                 Button(action:{
                                     

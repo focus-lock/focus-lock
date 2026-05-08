@@ -37,7 +37,25 @@ final class AppState: ObservableObject {
             activitySelection: activitySelection
         )
         rules.append(newRule)
+        // Temporarily shields the selected apps as soon as the rule is saved.
+        ScreenTimeShieldManager.shared.syncShields(for: rules)
+
+
         // Note: saveRules() is called automatically because of 'didSet' on the 'rules' variable.
+    }
+    
+    func toggleRule(id: UUID) {
+        guard let index = rules.firstIndex(where: { $0.id == id }) else {
+            return
+        }
+
+        // Flips the rule between enabled and disabled.
+        // The rules array saves automatically because of didSet.
+        rules[index].isEnabled.toggle()
+
+        // Rebuilds the active shields after the rule changes.
+        // If this rule was the only one blocking Instagram, disabling it removes the block.
+        ScreenTimeShieldManager.shared.syncShields(for: rules)
     }
     
     // Sets initial state of rules
@@ -91,6 +109,10 @@ final class AppState: ObservableObject {
         rules.removeAll(){
             $0.id == id
         }
+
+        // Re-apply shields using only the rules that still exist.
+        // If the deleted rule was the last active rule, this removes the block.
+        ScreenTimeShieldManager.shared.syncShields(for: rules)
     }
     
     
@@ -129,4 +151,3 @@ final class AppState: ObservableObject {
     }
     
 }
-
