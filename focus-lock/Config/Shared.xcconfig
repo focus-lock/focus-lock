@@ -1,0 +1,9 @@
+// Shared signing defaults.
+//
+// These values keep the project buildable after a fresh checkout. Each developer
+// can override them in Local.xcconfig without committing personal signing changes.
+
+DEVELOPMENT_TEAM = TGK2CZ6QA4
+APP_BUNDLE_ID = com.focuslock.focuslock-app
+
+#include? "Local.xcconfig"

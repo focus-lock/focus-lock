@@ -38,6 +38,9 @@
 
 /* Begin PBXFileReference section */
 		71209C212F1429F3008313C6 /* focus-lock.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "focus-lock.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		71209C302F1429F4008313C6 /* Shared.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Shared.xcconfig; sourceTree = "<group>"; };
+		71209C312F1429F4008313C6 /* Local.example.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Local.example.xcconfig; sourceTree = "<group>"; };
+		71209C332F1429F4008313C6 /* Local.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Local.xcconfig; sourceTree = "<group>"; };
 		F173ED472FAE63990012076D /* FocusLockShieldConfiguration.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = FocusLockShieldConfiguration.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		F173ED492FAE639A0012076D /* ManagedSettings.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ManagedSettings.framework; path = System/Library/Frameworks/ManagedSettings.framework; sourceTree = SDKROOT; };
 		F173ED4B2FAE639A0012076D /* ManagedSettingsUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ManagedSettingsUI.framework; path = System/Library/Frameworks/ManagedSettingsUI.framework; sourceTree = SDKROOT; };
@@ -92,11 +95,22 @@
 		71209C182F1429F3008313C6 = {
 			isa = PBXGroup;
 			children = (
+				71209C322F1429F4008313C6 /* Config */,
 				71209C232F1429F3008313C6 /* focus-lock */,
 				F173ED4D2FAE639A0012076D /* FocusLockShieldConfiguration */,
 				F173ED482FAE639A0012076D /* Frameworks */,
 				71209C222F1429F3008313C6 /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		71209C322F1429F4008313C6 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				71209C302F1429F4008313C6 /* Shared.xcconfig */,
+				71209C312F1429F4008313C6 /* Local.example.xcconfig */,
+				71209C332F1429F4008313C6 /* Local.xcconfig */,
+			);
+			path = Config;
 			sourceTree = "<group>";
 		};
 		71209C222F1429F3008313C6 /* Products */ = {
@@ -368,6 +382,7 @@
 		};
 		71209C2D2F1429F4008313C6 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 71209C302F1429F4008313C6 /* Shared.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -375,7 +390,6 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = TGK2CZ6QA4;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "focus-lock";
@@ -390,7 +404,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.focuslock.focuslock-app";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APP_BUNDLE_ID)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -405,6 +419,7 @@
 		};
 		71209C2E2F1429F4008313C6 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 71209C302F1429F4008313C6 /* Shared.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -412,7 +427,6 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = TGK2CZ6QA4;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "focus-lock";
@@ -427,7 +441,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.focuslock.focuslock-app";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APP_BUNDLE_ID)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -442,14 +456,14 @@
 		};
 		F173EDE62FAFD0260012076D /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 71209C302F1429F4008313C6 /* Shared.xcconfig */;
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
-				DEVELOPMENT_TEAM = TGK2CZ6QA4;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = FocusLockShieldConfiguration/Info.plist;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.focuslock.focuslock-app.FocusLockShieldConfiguration";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APP_BUNDLE_ID).FocusLockShieldConfiguration";
 				PRODUCT_NAME = FocusLockShieldConfiguration;
 				SWIFT_VERSION = 5.0;
 			};
@@ -457,13 +471,13 @@
 		};
 		F173EDE72FAFD0260012076D /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 71209C302F1429F4008313C6 /* Shared.xcconfig */;
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = TGK2CZ6QA4;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = FocusLockShieldConfiguration/Info.plist;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.focuslock.focuslock-app.FocusLockShieldConfiguration";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APP_BUNDLE_ID).FocusLockShieldConfiguration";
 				PRODUCT_NAME = FocusLockShieldConfiguration;
 				SWIFT_VERSION = 5.0;
 			};
