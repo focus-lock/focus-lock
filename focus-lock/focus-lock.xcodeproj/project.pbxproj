@@ -6,14 +6,65 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		F173ED4A2FAE639A0012076D /* ManagedSettings.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F173ED492FAE639A0012076D /* ManagedSettings.framework */; };
+		F173ED4C2FAE639A0012076D /* ManagedSettingsUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F173ED4B2FAE639A0012076D /* ManagedSettingsUI.framework */; };
+		F173ED542FAE639A0012076D /* FocusLockShieldConfiguration.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = F173ED472FAE63990012076D /* FocusLockShieldConfiguration.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		F173ED522FAE639A0012076D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 71209C192F1429F3008313C6 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F173ED462FAE63990012076D;
+			remoteInfo = FocusLockShieldConfiguration;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		F173ED552FAE639A0012076D /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				F173ED542FAE639A0012076D /* FocusLockShieldConfiguration.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		71209C212F1429F3008313C6 /* focus-lock.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "focus-lock.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		F173ED472FAE63990012076D /* FocusLockShieldConfiguration.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = FocusLockShieldConfiguration.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		F173ED492FAE639A0012076D /* ManagedSettings.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ManagedSettings.framework; path = System/Library/Frameworks/ManagedSettings.framework; sourceTree = SDKROOT; };
+		F173ED4B2FAE639A0012076D /* ManagedSettingsUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ManagedSettingsUI.framework; path = System/Library/Frameworks/ManagedSettingsUI.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		F173ED582FAE639A0012076D /* Exceptions for "FocusLockShieldConfiguration" folder in "FocusLockShieldConfiguration" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = F173ED462FAE63990012076D /* FocusLockShieldConfiguration */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		71209C232F1429F3008313C6 /* focus-lock */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = "focus-lock";
+			sourceTree = "<group>";
+		};
+		F173ED4D2FAE639A0012076D /* FocusLockShieldConfiguration */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				F173ED582FAE639A0012076D /* Exceptions for "FocusLockShieldConfiguration" folder in "FocusLockShieldConfiguration" target */,
+			);
+			path = FocusLockShieldConfiguration;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -26,6 +77,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F173ED442FAE63990012076D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F173ED4A2FAE639A0012076D /* ManagedSettings.framework in Frameworks */,
+				F173ED4C2FAE639A0012076D /* ManagedSettingsUI.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -33,6 +93,8 @@
 			isa = PBXGroup;
 			children = (
 				71209C232F1429F3008313C6 /* focus-lock */,
+				F173ED4D2FAE639A0012076D /* FocusLockShieldConfiguration */,
+				F173ED482FAE639A0012076D /* Frameworks */,
 				71209C222F1429F3008313C6 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,8 +103,18 @@
 			isa = PBXGroup;
 			children = (
 				71209C212F1429F3008313C6 /* focus-lock.app */,
+				F173ED472FAE63990012076D /* FocusLockShieldConfiguration.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		F173ED482FAE639A0012076D /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				F173ED492FAE639A0012076D /* ManagedSettings.framework */,
+				F173ED4B2FAE639A0012076D /* ManagedSettingsUI.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -55,10 +127,12 @@
 				71209C1D2F1429F3008313C6 /* Sources */,
 				71209C1E2F1429F3008313C6 /* Frameworks */,
 				71209C1F2F1429F3008313C6 /* Resources */,
+				F173ED552FAE639A0012076D /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				F173ED532FAE639A0012076D /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				71209C232F1429F3008313C6 /* focus-lock */,
@@ -69,6 +143,28 @@
 			productName = "focus-lock";
 			productReference = 71209C212F1429F3008313C6 /* focus-lock.app */;
 			productType = "com.apple.product-type.application";
+		};
+		F173ED462FAE63990012076D /* FocusLockShieldConfiguration */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F173ED592FAE639A0012076D /* Build configuration list for PBXNativeTarget "FocusLockShieldConfiguration" */;
+			buildPhases = (
+				F173ED432FAE63990012076D /* Sources */,
+				F173ED442FAE63990012076D /* Frameworks */,
+				F173ED452FAE63990012076D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				F173ED4D2FAE639A0012076D /* FocusLockShieldConfiguration */,
+			);
+			name = FocusLockShieldConfiguration;
+			packageProductDependencies = (
+			);
+			productName = FocusLockShieldConfiguration;
+			productReference = F173ED472FAE63990012076D /* FocusLockShieldConfiguration.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -81,6 +177,9 @@
 				LastUpgradeCheck = 2620;
 				TargetAttributes = {
 					71209C202F1429F3008313C6 = {
+						CreatedOnToolsVersion = 26.2;
+					};
+					F173ED462FAE63990012076D = {
 						CreatedOnToolsVersion = 26.2;
 					};
 				};
@@ -100,12 +199,20 @@
 			projectRoot = "";
 			targets = (
 				71209C202F1429F3008313C6 /* focus-lock */,
+				F173ED462FAE63990012076D /* FocusLockShieldConfiguration */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		71209C1F2F1429F3008313C6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F173ED452FAE63990012076D /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -122,7 +229,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F173ED432FAE63990012076D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		F173ED532FAE639A0012076D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F173ED462FAE63990012076D /* FocusLockShieldConfiguration */;
+			targetProxy = F173ED522FAE639A0012076D /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		71209C2A2F1429F4008313C6 /* Debug */ = {
@@ -335,6 +457,15 @@
 			buildConfigurations = (
 				71209C2D2F1429F4008313C6 /* Debug */,
 				71209C2E2F1429F4008313C6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F173ED592FAE639A0012076D /* Build configuration list for PBXNativeTarget "FocusLockShieldConfiguration" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F173ED562FAE639A0012076D /* Debug */,
+				F173ED572FAE639A0012076D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
