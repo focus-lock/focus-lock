@@ -375,7 +375,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 6326888VVQ;
+				DEVELOPMENT_TEAM = TGK2CZ6QA4;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "focus-lock";
@@ -390,7 +390,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.focuslock.focuslockapp;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.focuslock.focuslock-app";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -412,7 +412,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 6326888VVQ;
+				DEVELOPMENT_TEAM = TGK2CZ6QA4;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "focus-lock";
@@ -427,7 +427,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.focuslock.focuslockapp;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.focuslock.focuslock-app";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -437,6 +437,35 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		F173EDE62FAFD0260012076D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				DEVELOPMENT_TEAM = TGK2CZ6QA4;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = FocusLockShieldConfiguration/Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.focuslock.focuslock-app.FocusLockShieldConfiguration";
+				PRODUCT_NAME = FocusLockShieldConfiguration;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		F173EDE72FAFD0260012076D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = TGK2CZ6QA4;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = FocusLockShieldConfiguration/Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.focuslock.focuslock-app.FocusLockShieldConfiguration";
+				PRODUCT_NAME = FocusLockShieldConfiguration;
+				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
 		};
@@ -464,8 +493,8 @@
 		F173ED592FAE639A0012076D /* Build configuration list for PBXNativeTarget "FocusLockShieldConfiguration" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				F173ED562FAE639A0012076D /* Debug */,
-				F173ED572FAE639A0012076D /* Release */,
+				F173EDE62FAFD0260012076D /* Debug */,
+				F173EDE72FAFD0260012076D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
