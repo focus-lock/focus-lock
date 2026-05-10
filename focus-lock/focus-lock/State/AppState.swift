@@ -20,7 +20,7 @@ final class AppState: ObservableObject {
     ] {
         // Runs right after something changes in rules
         didSet {
-            saveRules()
+            persistAndSyncRules()
         }
     }
     
@@ -37,11 +37,8 @@ final class AppState: ObservableObject {
             activitySelection: activitySelection
         )
         rules.append(newRule)
-        // Temporarily shields the selected apps as soon as the rule is saved.
-        ScreenTimeShieldManager.shared.syncShields(for: rules)
-
-
-        // Note: saveRules() is called automatically because of 'didSet' on the 'rules' variable.
+        // Note: saving, schedule registration, and shield refresh happen automatically
+        // because of 'didSet' on the 'rules' variable.
     }
     
     func toggleRule(id: UUID) {
@@ -53,56 +50,45 @@ final class AppState: ObservableObject {
         // The rules array saves automatically because of didSet.
         rules[index].isEnabled.toggle()
 
-        // Rebuilds the active shields after the rule changes.
-        // If this rule was the only one blocking Instagram, disabling it removes the block.
+        // didSet rebuilds schedules and shields after the rule changes.
+    }
+    
+    // Sets initial state of rules.
+    //
+    // init runs when AppState is first created.
+    //
+    // This is important because saved rules should still matter after the app restarts.
+    init () {
+        // During DeviceActivity debugging, dump the shared diagnostic log whenever
+        // the app starts. This lets us see extension breadcrumbs after reopening the app.
+        FocusLockDiagnostics.dumpLogToConsole()
+
+        // Load previously saved rules from the shared App Group store.
+        rules = loadRules()
+
+        // Tell iOS about all enabled schedules again.
+        //
+        // This is defensive: if the app restarts, we make sure DeviceActivityCenter
+        // still has the latest schedule registrations.
+        DeviceActivityScheduleManager.shared.syncSchedules(for: rules)
+
+        // Apply the correct shield state right now while the app is open.
+        //
+        // Example:
+        // If you open the app during an active rule window, this makes sure shields match.
         ScreenTimeShieldManager.shared.syncShields(for: rules)
     }
     
-    // Sets initial state of rules
-    init () {
-        rules = loadRules()
-    }
-    
-    
-    // Retrieves document folder within phone and stores rules.json within that folder path
-    private func rulesFileURL() -> URL {
-        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        return documents.appendingPathComponent("rules.json")
-    }
-    
-    
-    // Writes rules into documents
+    // Writes rules into shared App Group storage so the DeviceActivity extension can read them.
     private func saveRules(){
-        do {
-            // Turns Rules object in JSON
-            let data = try JSONEncoder().encode(rules)
-            // Writes JSON data into ruleFileURL
-            try data.write(to: rulesFileURL())
-        } catch {
-            print("Failed to save rules:", error)
-        }
+        FocusLockRuleStore.saveRules(rules)
     }
     
     
     // Loads rules from the file path (Only runs at init)
     private func loadRules() -> [Rule] {
         
-        let url = rulesFileURL()
-        
-        // Just makes sure rules.json exists
-        guard FileManager.default.fileExists(atPath: url.path) else {
-            return []
-        }
-        
-        
-        // Converts JSON to array of Rule and returns
-        do {
-            let data = try Data(contentsOf: url)
-            return try JSONDecoder().decode([Rule].self, from: data)
-        } catch {
-            print("Failed to load rules:", error)
-            return []
-        }
+        FocusLockRuleStore.loadRules()
     }
     
     func deleteRule(id:UUID){
@@ -110,8 +96,23 @@ final class AppState: ObservableObject {
             $0.id == id
         }
 
-        // Re-apply shields using only the rules that still exist.
-        // If the deleted rule was the last active rule, this removes the block.
+        // didSet re-applies schedules and shields using only the rules that still exist.
+    }
+
+    private func persistAndSyncRules() {
+        // 1. Save the latest rules to shared storage.
+        //
+        // The DeviceActivity extension reads from this same storage later.
+        saveRules()
+
+        // 2. Register/update the iOS schedules for enabled rules.
+        //
+        // This is the piece that lets iOS wake us up while the app is closed.
+        DeviceActivityScheduleManager.shared.syncSchedules(for: rules)
+
+        // 3. Refresh shields immediately in case the rule should apply right now.
+        //
+        // This makes the app feel instant instead of waiting for the next schedule boundary.
         ScreenTimeShieldManager.shared.syncShields(for: rules)
     }
     

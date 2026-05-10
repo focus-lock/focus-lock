@@ -5,5 +5,6 @@
 
 DEVELOPMENT_TEAM = TGK2CZ6QA4
 APP_BUNDLE_ID = com.focuslock.focuslock-app
+APP_GROUP_IDENTIFIER = group.com.focuslock.focuslock-app
 
 #include? "Local.xcconfig"
