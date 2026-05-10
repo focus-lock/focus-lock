@@ -3,3 +3,4 @@
 
 DEVELOPMENT_TEAM = YOUR_TEAM_ID
 APP_BUNDLE_ID = com.yourname.focuslock
+APP_GROUP_IDENTIFIER = group.com.yourname.focuslock
