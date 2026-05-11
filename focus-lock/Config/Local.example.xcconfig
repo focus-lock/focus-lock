@@ -1,5 +1,9 @@
 // Copy this file to Local.xcconfig and replace the values with your Apple
 // Developer account settings. Local.xcconfig is ignored by Git.
+//
+// APP_GROUP_IDENTIFIER must be the exact App Group enabled for both the
+// focus-lock app target and the FocusLockDeviceActivityMonitor extension.
+// Xcode writes this same value into entitlements and Info.plist.
 
 DEVELOPMENT_TEAM = YOUR_TEAM_ID
 APP_BUNDLE_ID = com.yourname.focuslock

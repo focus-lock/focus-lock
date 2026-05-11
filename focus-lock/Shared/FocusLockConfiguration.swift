@@ -14,8 +14,10 @@ enum FocusLockConfiguration {
 
     // This is the Info.plist key where we store the resolved App Group identifier.
     //
-    // In project.pbxproj, we set:
+    // In the main app target, project.pbxproj sets:
     // INFOPLIST_KEY_FocusLockAppGroupIdentifier = "$(APP_GROUP_IDENTIFIER)";
+    //
+    // In the DeviceActivity monitor extension, Info.plist contains the same key.
     //
     // At build time, Xcode replaces $(APP_GROUP_IDENTIFIER) with something like:
     // group.com.focuslock.focuslockapp
@@ -25,15 +27,21 @@ enum FocusLockConfiguration {
     //
     // It looks like a variable, but it runs code each time we ask for it.
     static var appGroupIdentifier: String {
-        if let appGroup = infoPlistAppGroupIdentifier {
-            return appGroup
+        guard let appGroup = infoPlistAppGroupIdentifier else {
+            fatalError(
+                """
+                Missing \(appGroupInfoKey) in Info.plist. Set APP_GROUP_IDENTIFIER \
+                in focus-lock/Config/Local.xcconfig so Xcode writes the same App \
+                Group into Info.plist and the target entitlements.
+                """
+            )
         }
 
-        return derivedAppGroupIdentifier
+        return appGroup
     }
 
     static var appGroupSource: String {
-        infoPlistAppGroupIdentifier == nil ? "bundle identifier fallback" : "Info.plist"
+        "Info.plist"
     }
 
     private static var infoPlistAppGroupIdentifier: String? {
@@ -59,23 +67,5 @@ enum FocusLockConfiguration {
         }
 
         return nil
-    }
-
-    private static var derivedAppGroupIdentifier: String {
-        // Fallback value derived from the current bundle identifier.
-        //
-        // Ideally we do not use this, because the xcconfig/project setting should provide
-        // the real value. But if the Info.plist key is missing, deriving from the bundle
-        // ID is safer than hardcoding one developer's App Group.
-        //
-        // Examples:
-        // com.focuslock.focuslockapp -> group.com.focuslock.focuslockapp
-        // com.focuslock.focuslockapp.FocusLockDeviceActivityMonitor -> group.com.focuslock.focuslockapp
-        let bundleID = Bundle.main.bundleIdentifier ?? "com.focuslock.focuslock-app"
-        let baseBundleID = bundleID
-            .replacingOccurrences(of: ".FocusLockDeviceActivityMonitor", with: "")
-            .replacingOccurrences(of: ".FocusLockShieldConfiguration", with: "")
-
-        return "group.\(baseBundleID)"
     }
 }

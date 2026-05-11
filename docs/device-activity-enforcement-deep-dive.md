@@ -173,6 +173,8 @@ The committed entitlements use:
 $(APP_GROUP_IDENTIFIER)
 ```
 
+The app also reads `FocusLockAppGroupIdentifier` from Info.plist at runtime. The main app plist lives at `focus-lock/Config/focus-lock-Info.plist`, and the monitor extension plist lives at `focus-lock/FocusLockDeviceActivityMonitor/Info.plist`. Xcode writes the same `APP_GROUP_IDENTIFIER` build setting into both, so signing and runtime storage lookup stay in sync.
+
 That keeps the committed project flexible for both individual Apple Developer accounts.
 
 ## 6. The Shared Rule Model
@@ -412,9 +414,9 @@ It also has:
 
 That tells iOS which Swift class to instantiate when the extension runs.
 
-### What we wanted from Info.plist
+### What Info.plist provides
 
-We tried to read this from Info.plist:
+The app and DeviceActivity monitor extension read this from Info.plist:
 
 ```text
 FocusLockAppGroupIdentifier
@@ -424,7 +426,7 @@ The idea was:
 
 ```text
 Xcode build settings know APP_GROUP_IDENTIFIER.
-Xcode writes APP_GROUP_IDENTIFIER into Info.plist.
+Xcode writes APP_GROUP_IDENTIFIER into the app and monitor extension Info.plists.
 Swift reads FocusLockAppGroupIdentifier from Info.plist.
 Swift uses that value to find the App Group container.
 ```
@@ -447,7 +449,7 @@ or:
 APP_GROUP_IDENTIFIER = group.com.focuslock.focuslock-app
 ```
 
-In theory, that is a nice design:
+That gives us one source of truth:
 
 ```text
 Local.xcconfig controls local identity.
@@ -455,31 +457,24 @@ Entitlements use the same value for signing.
 Info.plist exposes the same value to Swift at runtime.
 ```
 
-### What actually happened
+### Why this matters
 
-But runtime logs showed:
-
-```text
-(bundle identifier fallback)
-```
-
-That means the custom Info.plist key was not available at runtime.
-
-So Swift asked:
+App Group access has two sides:
 
 ```text
-Do you have FocusLockAppGroupIdentifier?
+Entitlements say what the signed binary is allowed to access.
+Runtime code says which App Group container the app asks FileManager to open.
 ```
 
-and the running app effectively answered:
+Those two strings must match exactly. If the app asks for a group that is not in its entitlements, iOS reports:
 
 ```text
-No.
+container_create_or_lookup_app_group_path_by_app_group_identifier: client is not entitled
 ```
 
-The app still needed an App Group string, so it used fallback logic.
+### What went wrong before
 
-At first, the fallback was hardcoded to Suraj's group:
+At first, the fallback path was hardcoded to Suraj's group:
 
 ```text
 group.com.focuslock.focuslock-app
@@ -491,80 +486,40 @@ That broke on Shabarish's device, which needed:
 group.com.focuslock.focuslockapp
 ```
 
-### What we did instead
-
-The current fallback derives from the running bundle ID:
+Then the fallback was improved to derive from the running bundle ID:
 
 ```text
 com.focuslock.focuslockapp
 -> group.com.focuslock.focuslockapp
 ```
 
-For the extension:
+That helped prove the feature worked on both local setups, but it still left the app with two possible configuration sources.
+
+### Current behavior
+
+The code now treats `FocusLockAppGroupIdentifier` as required. That means the runtime App Group lookup should follow this path:
 
 ```text
-com.focuslock.focuslockapp.FocusLockDeviceActivityMonitor
--> group.com.focuslock.focuslockapp
+APP_GROUP_IDENTIFIER in xcconfig
+-> FocusLockAppGroupIdentifier in Info.plist
+-> FocusLockConfiguration.appGroupIdentifier
+-> FileManager.default.containerURL(...)
 ```
 
-This works because our convention is:
+If the Info.plist key is missing, that is a project configuration bug to fix directly. The app should not quietly invent an App Group string from the bundle ID.
+
+For Shabarish, the expected local values are:
 
 ```text
-App Group = group.<main app bundle id>
+APP_BUNDLE_ID = com.focuslock.focuslockapp
+APP_GROUP_IDENTIFIER = group.com.focuslock.focuslockapp
 ```
 
-For the main app, the bundle ID is already the base app ID:
+For Suraj, the expected local values are:
 
 ```text
-com.focuslock.focuslockapp
-```
-
-For the extension, the bundle ID has a suffix:
-
-```text
-com.focuslock.focuslockapp.FocusLockDeviceActivityMonitor
-```
-
-So the fallback removes known extension suffixes before adding `group.`.
-
-### Why this is okay for now
-
-The fallback is safer than hardcoding one developer's value because it adapts to both local setups:
-
-```text
-Shabarish:
-com.focuslock.focuslockapp
--> group.com.focuslock.focuslockapp
-
-Suraj:
-com.focuslock.focuslock-app
--> group.com.focuslock.focuslock-app
-```
-
-It also helped us prove the feature works. After the fallback produced the correct local group, App Group storage started working and closed-app blocking succeeded.
-
-### Why this still needs cleanup
-
-The confusing part is that the code still has two possible sources:
-
-```text
-1. Info.plist key
-2. bundle identifier fallback
-```
-
-That is why we created ticket #34. Long-term, we should choose one source of truth.
-
-This is tracked for cleanup in:
-
-```text
-#34 Fix App Group runtime configuration source
-```
-
-Long-term, we should choose one clean source of truth:
-
-```text
-Option A: make Info.plist key work reliably
-Option B: always derive from bundle ID and remove unused Info.plist plumbing
+APP_BUNDLE_ID = com.focuslock.focuslock-app
+APP_GROUP_IDENTIFIER = group.com.focuslock.focuslock-app
 ```
 
 ## 14. Diagnostics
