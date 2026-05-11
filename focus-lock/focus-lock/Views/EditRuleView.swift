@@ -34,6 +34,10 @@ struct EditRuleView: View {
 
     // Tracks whether Apple's Screen Time picker should be visible.
     @State private var showAppPicker = false
+    
+    // Controls the popup shown when the edited schedule is too short for DeviceActivity.
+    @State private var showDurationAlert = false
+
 
     // Runs when this edit screen is created with a specific rule.
     init(rule: Rule) {
@@ -114,35 +118,48 @@ struct EditRuleView: View {
 
                 // Places this item where Save actions normally appear.
                 ToolbarItem(placement: .confirmationAction) {
-                    // Creates a Save button.
                     Button("Save") {
-                        // Calls AppState to update the existing rule in the rules array.
-                        appState.editRule(
-                            // Sends the original rule id so AppState knows which rule to update.
+                        // Create a temporary version of the edited rule so we can check the
+                        // new start/end time before changing the saved rule.
+                        let draftRule = Rule(
                             id: rule.id,
-
-                            // Sends the edited rule name.
                             title: ruleName,
-
-                            // Sends the edited start time.
-                            start: startTime,
-
-                            // Sends the edited end time.
-                            end: endTime,
-
-                            // Sends the edited app/category selection.
+                            isEnabled: rule.isEnabled,
+                            createdAt: rule.createdAt,
+                            startTime: startTime,
+                            endTime: endTime,
                             activitySelection: activitySelection
                         )
 
-                        // Closes the edit sheet after saving.
+                        // DeviceActivity will not monitor intervals shorter than our shared
+                        // minimum, so keep the original rule unchanged and explain the problem.
+                        if FocusLockSchedule.durationMinutes(for: draftRule) < FocusLockSchedule.minimumMonitorDurationMinutes {
+                            showDurationAlert = true
+                            return
+                        }
+
+                        appState.editRule(
+                            id: rule.id,
+                            title: ruleName,
+                            start: startTime,
+                            end: endTime,
+                            activitySelection: activitySelection
+                        )
+
                         dismiss()
                     }
+
 
                     // Prevents saving when required fields are missing.
                     .disabled(ruleName.isEmpty || activitySelection.applicationTokens.isEmpty)
                 }
             }
-
+            // Explains why Save did not work when the schedule is under the minimum duration.
+            .alert("Schedule Too Short", isPresented: $showDurationAlert) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text("Focus Lock rules must be at least \(FocusLockSchedule.minimumMonitorDurationMinutes) minutes long.")
+            }
             // Attaches Apple's Screen Time picker to this edit screen.
             .familyActivityPicker(
                 // Opens the picker when showAppPicker becomes true.

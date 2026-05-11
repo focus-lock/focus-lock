@@ -22,6 +22,9 @@ import ManagedSettings
 // The app and the DeviceActivity extension should agree on schedule behavior.
 // So the "is this rule active right now?" logic lives here once instead of being copied.
 enum FocusLockSchedule {
+    // DeviceActivity can reject very short schedules with an intervalTooShort error.
+    // Keeping the minimum in one shared constant makes the UI validation and
+    // schedule registration use the same rule.
     static let minimumMonitorDurationMinutes = 15
 
     // Decides whether a rule is worth registering with DeviceActivity.
