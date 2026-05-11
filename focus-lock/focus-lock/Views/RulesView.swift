@@ -13,7 +13,10 @@ struct RulesView: View {
     // New State to track if the sheet(rule add modal) is open
     @State private var showCreateSheet = false
     
+    @State private var ruleBeingEdited: Rule?
+    
     @State private var goToBlocked = false
+    
     
     @EnvironmentObject var appState: AppState
     
@@ -35,6 +38,9 @@ struct RulesView: View {
             .sheet(isPresented: $showCreateSheet){
                 CreateRuleView()
             }
+            .sheet(item: $ruleBeingEdited){ rule in
+                EditRuleView(rule:rule)
+            }
             
             
             ScrollView(.vertical, showsIndicators: false) {
@@ -55,7 +61,18 @@ struct RulesView: View {
                                         // Toggle through AppState so the actual Screen Time shield updates too.
                                         appState.toggleRule(id: rule.id)
                                     }
-
+                                
+                                //Editing Rule Button
+                                Button(action: {
+                                    //Updated state var with rule that is currently being edited and goes back to .sheet to call EditRuleView
+                                    ruleBeingEdited = rule
+                                }) {
+                                    Image(systemName: "pencil")
+                                        .foregroundStyle(.blue)
+                                        .font(.title2)
+                                }
+                                .buttonStyle(BorderlessButtonStyle())
+                                
                                 
                                 Button(action:{
                                     

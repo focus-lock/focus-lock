@@ -98,6 +98,33 @@ final class AppState: ObservableObject {
 
         // didSet re-applies schedules and shields using only the rules that still exist.
     }
+    
+    func editRule(id: UUID,
+                  title: String,
+                  start: Date,
+                  end: Date,
+                  activitySelection: FamilyActivitySelection
+              ){
+        // Finds the position of the rule in the rules array whose id matches the id passed into this function.
+        guard let index = rules.firstIndex(where: {$0.id == id}) else{
+            return
+        }
+        
+        // Replace the old title with the new title from the edit form.
+            rules[index].title = title
+
+            // Replace the old start time with the new start time from the edit form.
+            rules[index].startTime = start
+
+            // Replace the old end time with the new end time from the edit form.
+            rules[index].endTime = end
+
+            // Replace the old Screen Time app/category selection with the new selection from the edit form.
+            rules[index].activitySelection = activitySelection
+
+            // Because rules is @Published and has didSet, changing this rule automatically saves and syncs it.
+        
+    }
 
     private func persistAndSyncRules() {
         // 1. Save the latest rules to shared storage.
