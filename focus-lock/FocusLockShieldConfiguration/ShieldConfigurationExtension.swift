@@ -13,10 +13,9 @@ import UIKit
 // The system provides a default appearance for any methods that your subclass doesn't override.
 // Make sure that your class name matches the NSExtensionPrincipalClass in your Info.plist.
 class ShieldConfigurationExtension: ShieldConfigurationDataSource {
-    // iOS calls this when the user opens an app that Focus Lock has shielded.
-    // This config controls the system blocked screen shown over that app.
-    override func configuration(shielding application: Application) -> ShieldConfiguration {
-
+    // Builds the custom Focus Lock blocked screen that every shield type should reuse.
+    private func focusLockShieldConfiguration() -> ShieldConfiguration {
+        // Returns the title, subtitle, button text, and button color for the shield screen.
         return ShieldConfiguration(
             // Matches the title currently shown in BlockedView.
             title: .init(
@@ -41,18 +40,27 @@ class ShieldConfigurationExtension: ShieldConfigurationDataSource {
         )
     }
     
+    // iOS calls this when the user opens an app that was selected directly.
+    override func configuration(shielding application: Application) -> ShieldConfiguration {
+        // Shows the custom Focus Lock blocked screen for directly selected apps.
+        return focusLockShieldConfiguration()
+    }
+    
+    // iOS calls this when the user opens an app blocked because its category was selected.
     override func configuration(shielding application: Application, in category: ActivityCategory) -> ShieldConfiguration {
-        // Customize the shield as needed for applications shielded because of their category.
-        ShieldConfiguration()
+        // Shows the custom Focus Lock blocked screen for apps blocked through a category.
+        return focusLockShieldConfiguration()
     }
     
+    // iOS calls this when the user opens a web domain that was selected directly.
     override func configuration(shielding webDomain: WebDomain) -> ShieldConfiguration {
-        // Customize the shield as needed for web domains.
-        ShieldConfiguration()
+        // Shows the custom Focus Lock blocked screen for directly selected websites.
+        return focusLockShieldConfiguration()
     }
     
+    // iOS calls this when the user opens a web domain blocked because its category was selected.
     override func configuration(shielding webDomain: WebDomain, in category: ActivityCategory) -> ShieldConfiguration {
-        // Customize the shield as needed for web domains shielded because of their category.
-        ShieldConfiguration()
+        // Shows the custom Focus Lock blocked screen for websites blocked through a category.
+        return focusLockShieldConfiguration()
     }
 }

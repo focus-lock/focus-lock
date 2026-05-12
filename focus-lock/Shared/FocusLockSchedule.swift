@@ -26,6 +26,23 @@ enum FocusLockSchedule {
     // Keeping the minimum in one shared constant makes the UI validation and
     // schedule registration use the same rule.
     static let minimumMonitorDurationMinutes = 15
+    
+    
+    // Returns true when the picker has at least one selected app, category, or website.
+    static func hasSelectedActivity(_ selection: FamilyActivitySelection) -> Bool {
+        // Counts direct individual app selections.
+        let hasApps = !selection.applicationTokens.isEmpty
+
+        // Counts category selections, including category "Select All".
+        let hasCategories = !selection.categoryTokens.isEmpty
+
+        // Counts selected web domains if the user picks websites later.
+        let hasWebDomains = !selection.webDomainTokens.isEmpty
+
+        // Treat any of those three token sets as a valid saved selection.
+        return hasApps || hasCategories || hasWebDomains
+    }
+
 
     // Decides whether a rule is worth registering with DeviceActivity.
     //
@@ -37,9 +54,14 @@ enum FocusLockSchedule {
     // Apple throws intervalTooShort when we try tiny test windows like 2 minutes.
     // We use 15 minutes as our current development minimum.
     static func isMonitorable(_ rule: Rule) -> Bool {
-        rule.isEnabled &&
-        !rule.activitySelection.applicationTokens.isEmpty &&
-        durationMinutes(for: rule) >= minimumMonitorDurationMinutes
+        // Requires the rule toggle to be on.
+            rule.isEnabled &&
+
+            // Allows app, category, or web domain selections to count.
+            hasSelectedActivity(rule.activitySelection) &&
+
+            // Requires the schedule to meet Apple's DeviceActivity minimum duration.
+            durationMinutes(for: rule) >= minimumMonitorDurationMinutes
     }
 
     // Decides whether the current time is inside this rule's blocking window.
@@ -109,6 +131,32 @@ enum FocusLockSchedule {
 
                 // Add this rule's selected apps into the running Set.
                 selectedApps.formUnion(rule.activitySelection.applicationTokens)
+            }
+    }
+    
+    // Builds the active category tokens from currently active rules.
+    static func activeCategoryTokens(from rules: [Rule], now: Date = Date()) -> Set<ActivityCategoryToken> {
+        // Starts with rules that should apply right now.
+        rules.filter { isMonitorable($0) && isActive($0, now: now) }
+
+            // Combines all active category token sets into one set.
+            .reduce(into: Set<ActivityCategoryToken>()) { selectedCategories, rule in
+
+                // Adds this rule's selected categories.
+                selectedCategories.formUnion(rule.activitySelection.categoryTokens)
+            }
+    }
+
+    // Builds the active web domain tokens from currently active rules.
+    static func activeWebDomainTokens(from rules: [Rule], now: Date = Date()) -> Set<WebDomainToken> {
+        // Starts with rules that should apply right now.
+        rules.filter { isMonitorable($0) && isActive($0, now: now) }
+
+            // Combines all active web domain token sets into one set.
+            .reduce(into: Set<WebDomainToken>()) { selectedWebDomains, rule in
+
+                // Adds this rule's selected web domains.
+                selectedWebDomains.formUnion(rule.activitySelection.webDomainTokens)
             }
     }
 
