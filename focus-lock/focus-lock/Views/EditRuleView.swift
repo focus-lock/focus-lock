@@ -37,6 +37,45 @@ struct EditRuleView: View {
     
     // Controls the popup shown when the edited schedule is too short for DeviceActivity.
     @State private var showDurationAlert = false
+    
+    // Builds the text shown next to the app picker row.
+    private var selectedActivitySummary: String {
+        // Counts directly selected individual apps.
+        let appCount = activitySelection.applicationTokens.count
+
+        // Counts selected app categories, including category "Select All".
+        let categoryCount = activitySelection.categoryTokens.count
+
+        // Counts selected websites if the user selects web domains later.
+        let webDomainCount = activitySelection.webDomainTokens.count
+
+        // Stores each non-empty piece of the summary text.
+        var parts: [String] = []
+
+        // Adds an app summary when individual apps are selected.
+        if appCount > 0 {
+            parts.append("\(appCount) \(appCount == 1 ? "app" : "apps")")
+        }
+
+        // Adds a category summary when categories are selected.
+        if categoryCount > 0 {
+            parts.append("\(categoryCount) \(categoryCount == 1 ? "category" : "categories")")
+        }
+
+        // Adds a website summary when web domains are selected.
+        if webDomainCount > 0 {
+            parts.append("\(webDomainCount) \(webDomainCount == 1 ? "website" : "websites")")
+        }
+
+        // Shows zero selected when nothing has been picked yet.
+        if parts.isEmpty {
+            return "None Selected"
+        }
+
+        // Joins the non-empty pieces and adds the selected label at the end.
+        return parts.joined(separator: ", ") + " selected"
+    }
+
 
 
     // Runs when this edit screen is created with a specific rule.
@@ -94,7 +133,7 @@ struct EditRuleView: View {
                             Spacer()
 
                             // Shows how many apps are currently selected.
-                            Text("\(activitySelection.applicationTokens.count) selected")
+                            Text(selectedActivitySummary)
                                 // Makes the selected count use secondary text styling.
                                 .foregroundStyle(.secondary)
                         }
@@ -151,7 +190,7 @@ struct EditRuleView: View {
 
 
                     // Prevents saving when required fields are missing.
-                    .disabled(ruleName.isEmpty || activitySelection.applicationTokens.isEmpty)
+                    .disabled(ruleName.isEmpty || !FocusLockSchedule.hasSelectedActivity(activitySelection))
                 }
             }
             // Explains why Save did not work when the schedule is under the minimum duration.

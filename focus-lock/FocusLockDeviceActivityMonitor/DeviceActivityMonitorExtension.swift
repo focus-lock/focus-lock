@@ -70,11 +70,32 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
 
         // Ask the shared schedule helper which app tokens should be blocked at this moment.
         let activeApplicationTokens = FocusLockSchedule.activeApplicationTokens(from: rules)
-        FocusLockDiagnostics.record("DeviceActivityMonitor active token count: \(activeApplicationTokens.count).")
 
-        // If the set is empty, use nil to remove shields.
+        // Ask the shared schedule helper which app category tokens should be blocked at this moment.
+        let activeCategoryTokens = FocusLockSchedule.activeCategoryTokens(from: rules)
+
+        // Ask the shared schedule helper which web domain tokens should be blocked at this moment.
+        let activeWebDomainTokens = FocusLockSchedule.activeWebDomainTokens(from: rules)
+
+        // Record the active token counts so diagnostics show apps, categories, and websites separately.
+        FocusLockDiagnostics.record("DeviceActivityMonitor active token counts: apps=\(activeApplicationTokens.count), categories=\(activeCategoryTokens.count), webDomains=\(activeWebDomainTokens.count).")
+
+        // If the app token set is empty, use nil to remove direct app shields.
         // Otherwise, give iOS the exact selected app tokens to block.
         store.shield.applications = activeApplicationTokens.isEmpty ? nil : activeApplicationTokens
-        FocusLockDiagnostics.record(activeApplicationTokens.isEmpty ? "DeviceActivityMonitor cleared shields." : "DeviceActivityMonitor applied shields.")
+
+        // If the category token set is empty, use nil to remove category shields.
+        // Otherwise, give iOS the selected app categories to block.
+        store.shield.applicationCategories = activeCategoryTokens.isEmpty ? nil : .specific(activeCategoryTokens)
+
+        // If the web domain token set is empty, use nil to remove website shields.
+        // Otherwise, give iOS the exact selected web domains to block.
+        store.shield.webDomains = activeWebDomainTokens.isEmpty ? nil : activeWebDomainTokens
+
+        // Check whether any kind of shield is active after this refresh.
+        let hasActiveShields = !activeApplicationTokens.isEmpty || !activeCategoryTokens.isEmpty || !activeWebDomainTokens.isEmpty
+
+        // Record whether the monitor cleared every shield or applied at least one shield.
+        FocusLockDiagnostics.record(hasActiveShields ? "DeviceActivityMonitor applied shields." : "DeviceActivityMonitor cleared shields.")
     }
 }

@@ -23,21 +23,35 @@ final class ScreenTimeShieldManager {
         //
         // This returns a Set<ApplicationToken>.
         // Empty set means no selected apps currently need shielding.
+        // Gets the active individual app tokens.
         let activeApplicationTokens = FocusLockSchedule.activeApplicationTokens(from: rules)
 
-        // If no rules are active right now, remove all shields.
-        //
-        // The ternary operator works like:
-        // condition ? valueIfTrue : valueIfFalse
-        //
-        // So this means:
-        // if activeApplicationTokens is empty, set shield.applications to nil;
-        // otherwise, set it to the tokens we should block.
+        // Gets the active app category tokens.
+        let activeCategoryTokens = FocusLockSchedule.activeCategoryTokens(from: rules)
+
+        // Gets the active web domain tokens.
+        let activeWebDomainTokens = FocusLockSchedule.activeWebDomainTokens(from: rules)
+
+        // Shields directly selected apps, or clears app shields if none are active.
         store.shield.applications = activeApplicationTokens.isEmpty ? nil : activeApplicationTokens
+
+        // Shields selected app categories, or clears category shields if none are active.
+        store.shield.applicationCategories = activeCategoryTokens.isEmpty ? nil : .specific(activeCategoryTokens)
+
+        // Shields selected web domains, or clears web domain shields if none are active.
+        store.shield.webDomains = activeWebDomainTokens.isEmpty ? nil : activeWebDomainTokens
+
     }
 
     // Removes all app shields managed by this store.
     func clearShields() {
+        // Removes directly selected app shields.
         store.shield.applications = nil
+
+        // Removes selected category shields.
+        store.shield.applicationCategories = nil
+
+        // Removes selected web domain shields.
+        store.shield.webDomains = nil
     }
 }
