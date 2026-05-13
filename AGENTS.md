@@ -23,6 +23,7 @@ As of PR #35, the app has:
 - closed-app schedule enforcement through `FocusLockDeviceActivityMonitor`
 - shared rule storage using an App Group
 - a long-form learning doc at `docs/device-activity-enforcement-deep-dive.md`
+- an MVP 1 product vision doc at `docs/mvp-1-vision.md`
 
 The branch that introduced the DeviceActivity enforcement context was:
 
