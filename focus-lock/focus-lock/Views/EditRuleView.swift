@@ -31,12 +31,24 @@ struct EditRuleView: View {
 
     // Stores the editable app/category selection.
     @State private var activitySelection: FamilyActivitySelection
+    
+    // Stores the editable repeat weekdays.
+    @State private var repeatWeekdays: Set<Int>
+    
+    // Stores the editable date for a one-time rule.
+    @State private var oneTimeDate: Date
 
     // Tracks whether Apple's Screen Time picker should be visible.
     @State private var showAppPicker = false
     
+    // Controls the sheet where the user chooses repeat settings.
+    @State private var showRepeatSettings = false
+    
     // Controls the popup shown when the edited schedule is too short for DeviceActivity.
     @State private var showDurationAlert = false
+    
+    // Controls the popup shown when a one-time rule already ended.
+    @State private var showCompletedOneTimeAlert = false
     
     // Builds the text shown next to the app picker row.
     private var selectedActivitySummary: String {
@@ -75,6 +87,12 @@ struct EditRuleView: View {
         // Joins the non-empty pieces and adds the selected label at the end.
         return parts.joined(separator: ", ") + " selected"
     }
+    
+    // Returns true when no repeat weekdays are selected.
+    private var isOneTimeRule: Bool {
+        // Empty repeat days means this rule should happen once.
+        repeatWeekdays.isEmpty
+    }
 
 
 
@@ -94,6 +112,12 @@ struct EditRuleView: View {
 
         // Fills the app picker with the rule's current selected apps.
         _activitySelection = State(initialValue: rule.activitySelection)
+        
+        // Fills the repeat weekday controls with the rule's current repeat days.
+        _repeatWeekdays = State(initialValue: rule.repeatWeekdays)
+        
+        // Fills the one-time date picker with the saved date, or today if there is no saved date yet.
+        _oneTimeDate = State(initialValue: rule.oneTimeDate ?? Date())
     }
 
     // Describes the UI that appears inside the edit sheet.
@@ -115,6 +139,33 @@ struct EditRuleView: View {
 
                     // Lets the user change the end time.
                     DatePicker("End Time", selection: $endTime, displayedComponents: .hourAndMinute)
+                    
+                    // Shows a date picker only when the edited rule is one-time.
+                    if isOneTimeRule {
+                        // Lets the user choose the exact date for the one-time rule.
+                        DatePicker("Date", selection: $oneTimeDate, displayedComponents: .date)
+                    }
+                }
+                
+                // Groups recurrence controls under a Repeat heading.
+                Section("Repeat") {
+                    // Opens the repeat settings sheet when tapped.
+                    Button {
+                        // Shows the repeat settings sheet.
+                        showRepeatSettings = true
+                    } label: {
+                        // Places the row title and current repeat summary side by side.
+                        HStack {
+                            // Shows the row title.
+                            Text("Repeat")
+                            // Pushes the summary to the right side.
+                            Spacer()
+                            // Shows the current recurrence choice.
+                            Text(repeatSummary)
+                                // Styles the summary as secondary text.
+                                .foregroundStyle(.secondary)
+                        }
+                    }
                 }
 
                 // Groups the selected app controls under an Apps heading.
@@ -167,7 +218,11 @@ struct EditRuleView: View {
                             createdAt: rule.createdAt,
                             startTime: startTime,
                             endTime: endTime,
-                            activitySelection: activitySelection
+                            activitySelection: activitySelection,
+                            // Stores the edited repeat weekdays on the draft rule.
+                            repeatWeekdays: repeatWeekdays,
+                            // Stores a date only when this is a one-time rule.
+                            oneTimeDate: isOneTimeRule ? oneTimeDate : nil
                         )
 
                         // DeviceActivity will not monitor intervals shorter than our shared
@@ -176,13 +231,25 @@ struct EditRuleView: View {
                             showDurationAlert = true
                             return
                         }
+                        
+                        // One-time rules should not be saved if their end time has already passed.
+                        if FocusLockSchedule.isCompletedOneTimeRule(draftRule) {
+                            // Shows an alert explaining that the selected one-time session is already over.
+                            showCompletedOneTimeAlert = true
+                            // Stops before saving the expired one-time rule.
+                            return
+                        }
 
                         appState.editRule(
                             id: rule.id,
                             title: ruleName,
                             start: startTime,
                             end: endTime,
-                            activitySelection: activitySelection
+                            activitySelection: activitySelection,
+                            // Sends the edited repeat weekdays to AppState.
+                            repeatWeekdays: repeatWeekdays,
+                            // Sends a one-time date only when no weekdays are selected.
+                            oneTimeDate: isOneTimeRule ? oneTimeDate : nil
                         )
 
                         dismiss()
@@ -199,6 +266,17 @@ struct EditRuleView: View {
             } message: {
                 Text("Focus Lock rules must be at least \(FocusLockSchedule.minimumMonitorDurationMinutes) minutes long.")
             }
+            // Explains why Save did not work when a one-time rule is already over.
+            .alert("Invalid Time Range", isPresented: $showCompletedOneTimeAlert) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text("Choose a future date or a time window that has not already ended.")
+            }
+            // Opens the repeat settings picker as a sheet.
+            .sheet(isPresented: $showRepeatSettings) {
+                // Shows the shared repeat settings UI.
+                RepeatSettingsView(repeatWeekdays: $repeatWeekdays)
+            }
             // Attaches Apple's Screen Time picker to this edit screen.
             .familyActivityPicker(
                 // Opens the picker when showAppPicker becomes true.
@@ -208,5 +286,24 @@ struct EditRuleView: View {
                 selection: $activitySelection
             )
         }
+    }
+    
+    // Builds the repeat summary shown on the main form.
+    private var repeatSummary: String {
+        // Creates a temporary rule so we can reuse the shared summary helper.
+        let draftRule = Rule(
+            id: rule.id,
+            title: ruleName,
+            isEnabled: rule.isEnabled,
+            createdAt: rule.createdAt,
+            startTime: startTime,
+            endTime: endTime,
+            activitySelection: activitySelection,
+            repeatWeekdays: repeatWeekdays,
+            oneTimeDate: isOneTimeRule ? oneTimeDate : nil
+        )
+        
+        // Returns text like Daily, Tue/Thu, or One time.
+        return FocusLockSchedule.recurrenceSummary(for: draftRule)
     }
 }

@@ -51,6 +51,34 @@ struct Rule: Identifiable, Hashable, Codable {
     // We mostly use activitySelection.applicationTokens right now.
     // An ApplicationToken is Apple's privacy-preserving way to represent a selected app.
     var activitySelection: FamilyActivitySelection = FamilyActivitySelection()
+    
+    // Stores which weekdays this rule repeats on.
+        // Swift Calendar weekday numbers are usually:
+        // 1 = Sunday, 2 = Monday, 3 = Tuesday, 4 = Wednesday,
+        // 5 = Thursday, 6 = Friday, 7 = Saturday.
+        // If this set is empty, we treat the rule as a one-time rule.
+        var repeatWeekdays: Set<Int> = Rule.allWeekdays
+
+        // Stores the calendar date for a one-time rule.
+        // This is only used when repeatWeekdays is empty.
+        // Example: May 13, 2026.
+        var oneTimeDate: Date?
+
+        // Gives us one shared definition of "every day."
+        // Existing rules should behave like this after the migration.
+        static let allWeekdays: Set<Int> = [1, 2, 3, 4, 5, 6, 7]
+
+        // Returns true when the rule should repeat on one or more weekdays.
+        var isRecurring: Bool {
+            !repeatWeekdays.isEmpty
+        }
+
+        // Returns true when the rule should run once and then be removed.
+        var isOneTime: Bool {
+            repeatWeekdays.isEmpty
+        }
+    
+    
 
     // Hashable usually implies Equatable, and Swift can often generate this for us.
     // We define it manually so two Rule values count as "the same rule" if their IDs match.

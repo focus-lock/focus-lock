@@ -28,13 +28,27 @@ final class AppState: ObservableObject {
     
     // Encapsulation: The View shouldn't know HOW to append a rule, just that it WANTS to add one.
     // We now include start and end times in the creation.
-    func addRule(title: String, start: Date, end: Date, activitySelection: FamilyActivitySelection){
+    func addRule(title: String,
+                 start: Date,
+                 end: Date,
+                 activitySelection: FamilyActivitySelection,
+                 // Stores the selected repeat days for this new rule.
+                 repeatWeekdays: Set<Int> = Rule.allWeekdays,
+                 // Stores the date for this rule when it is a one-time rule.
+                 oneTimeDate: Date? = nil){
+        // Clears the one-time date for recurring rules because recurring rules do not need one exact date.
+        let savedOneTimeDate = repeatWeekdays.isEmpty ? oneTimeDate : nil
+        
         let newRule = Rule(
             title: title,
             isEnabled: true,
             startTime: start,
             endTime: end,
-            activitySelection: activitySelection
+            activitySelection: activitySelection,
+            // Saves the repeat days chosen by the user.
+            repeatWeekdays: repeatWeekdays,
+            // Saves the one-time date only when this is a one-time rule.
+            oneTimeDate: savedOneTimeDate
         )
         rules.append(newRule)
         // Note: saving, schedule registration, and shield refresh happen automatically
@@ -87,8 +101,20 @@ final class AppState: ObservableObject {
     
     // Loads rules from the file path (Only runs at init)
     private func loadRules() -> [Rule] {
+        // Reads all saved rules from App Group storage.
+        let savedRules = FocusLockRuleStore.loadRules()
         
-        FocusLockRuleStore.loadRules()
+        // Removes one-time rules that have already completed.
+        let activeRules = savedRules.filter { !FocusLockSchedule.isCompletedOneTimeRule($0) }
+        
+        // Checks whether any completed one-time rules were removed.
+        if activeRules.count != savedRules.count {
+            // Saves the cleaned rule list back to App Group storage.
+            FocusLockRuleStore.saveRules(activeRules)
+        }
+        
+        // Gives callers the cleaned list of rules.
+        return activeRules
     }
     
     func deleteRule(id:UUID){
@@ -99,16 +125,29 @@ final class AppState: ObservableObject {
         // didSet re-applies schedules and shields using only the rules that still exist.
     }
     
+    // Reloads rules from shared App Group storage.
+    func refreshRulesFromStorage() {
+        // Reads the latest saved rules, including changes made by the DeviceActivity extension.
+        rules = loadRules()
+    }
+    
     func editRule(id: UUID,
                   title: String,
                   start: Date,
                   end: Date,
-                  activitySelection: FamilyActivitySelection
+                  activitySelection: FamilyActivitySelection,
+                  // Stores the updated repeat days for this rule.
+                  repeatWeekdays: Set<Int> = Rule.allWeekdays,
+                  // Stores the updated date when this rule is one-time.
+                  oneTimeDate: Date? = nil
               ){
         // Finds the position of the rule in the rules array whose id matches the id passed into this function.
         guard let index = rules.firstIndex(where: {$0.id == id}) else{
             return
         }
+        
+        // Clears the one-time date for recurring rules because recurring rules do not need one exact date.
+        let savedOneTimeDate = repeatWeekdays.isEmpty ? oneTimeDate : nil
         
         // Replace the old title with the new title from the edit form.
             rules[index].title = title
@@ -121,6 +160,12 @@ final class AppState: ObservableObject {
 
             // Replace the old Screen Time app/category selection with the new selection from the edit form.
             rules[index].activitySelection = activitySelection
+        
+            // Replace the old repeat days with the new repeat days from the edit form.
+            rules[index].repeatWeekdays = repeatWeekdays
+        
+            // Replace the old one-time date with the new one-time date from the edit form.
+            rules[index].oneTimeDate = savedOneTimeDate
 
             // Because rules is @Published and has didSet, changing this rule automatically saves and syncs it.
         
