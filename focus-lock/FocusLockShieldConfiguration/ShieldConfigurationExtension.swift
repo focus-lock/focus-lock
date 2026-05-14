@@ -14,7 +14,7 @@ import UIKit
 // Make sure that your class name matches the NSExtensionPrincipalClass in your Info.plist.
 class ShieldConfigurationExtension: ShieldConfigurationDataSource {
     // Builds the custom Focus Lock blocked screen that every shield type should reuse.
-    private func focusLockShieldConfiguration() -> ShieldConfiguration {
+    private func focusLockShieldConfiguration(blockedName: String) -> ShieldConfiguration {
         // Returns the title, subtitle, button text, and button color for the shield screen.
         return ShieldConfiguration(
             // Uses a deep focus color behind the shield screen instead of the default background.
@@ -25,19 +25,19 @@ class ShieldConfigurationExtension: ShieldConfigurationDataSource {
             
             // Shows a calm title that makes the block feel intentional.
             title: .init(
-                text: "Focus Lock is active",
+                text: "\(blockedName) can wait",
                 color: .white
             ),
 
             // Reminds the user that this block protects the focus session they chose.
             subtitle: .init(
-                text: "You locked this app",
+                text: "You chose this focus window. Stay with it.",
                 color: .lightText
             ),
 
-            // Keeps the current unlock payment action for now.
+            // Gives the user a calm action label without implying payment or bypass behavior.
             primaryButtonLabel: .init(
-                text: "Pay $5 to unlock",
+                text: "Stay focused",
                 color: .white
             ),
 
@@ -49,24 +49,42 @@ class ShieldConfigurationExtension: ShieldConfigurationDataSource {
     // iOS calls this when the user opens an app that was selected directly.
     override func configuration(shielding application: Application) -> ShieldConfiguration {
         // Shows the custom Focus Lock blocked screen for directly selected apps.
-        return focusLockShieldConfiguration()
+        return focusLockShieldConfiguration(blockedName: displayName(for: application))
     }
     
     // iOS calls this when the user opens an app blocked because its category was selected.
     override func configuration(shielding application: Application, in category: ActivityCategory) -> ShieldConfiguration {
         // Shows the custom Focus Lock blocked screen for apps blocked through a category.
-        return focusLockShieldConfiguration()
+        return focusLockShieldConfiguration(blockedName: displayName(for: application))
     }
     
     // iOS calls this when the user opens a web domain that was selected directly.
     override func configuration(shielding webDomain: WebDomain) -> ShieldConfiguration {
         // Shows the custom Focus Lock blocked screen for directly selected websites.
-        return focusLockShieldConfiguration()
+        return focusLockShieldConfiguration(blockedName: displayName(for: webDomain))
     }
     
     // iOS calls this when the user opens a web domain blocked because its category was selected.
     override func configuration(shielding webDomain: WebDomain, in category: ActivityCategory) -> ShieldConfiguration {
         // Shows the custom Focus Lock blocked screen for websites blocked through a category.
-        return focusLockShieldConfiguration()
+        return focusLockShieldConfiguration(blockedName: displayName(for: webDomain))
+    }
+
+    // Uses Apple's display name when available, with a privacy-safe fallback.
+    private func displayName(for application: Application) -> String {
+        guard let name = application.localizedDisplayName, !name.isEmpty else {
+            return "This app"
+        }
+
+        return name
+    }
+
+    // Uses the website domain when Apple provides it, with a generic fallback.
+    private func displayName(for webDomain: WebDomain) -> String {
+        guard let domain = webDomain.domain, !domain.isEmpty else {
+            return "This website"
+        }
+
+        return domain
     }
 }
