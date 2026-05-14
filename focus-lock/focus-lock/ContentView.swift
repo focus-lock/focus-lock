@@ -10,9 +10,8 @@ import SwiftUI
 struct ContentView: View {
     @State private var isAuthed = false
     
-    // Create and own the shared app state at the root.
-    // @StateObject ensures the object is created once and survives view reloads.
-    @StateObject private var appState = AppState()
+    // Reads the shared app state created by focus_lockApp.
+    @EnvironmentObject private var appState: AppState
 
     var body: some View {
         if isAuthed {
@@ -46,4 +45,6 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
+        // Gives the preview the shared app state that ContentView expects.
+        .environmentObject(AppState())
 }

@@ -22,6 +22,9 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
     // Setting store.shield.applications blocks apps.
     // Setting store.shield.applications = nil removes app shields from this store.
     private let store = ManagedSettingsStore()
+    
+    // DeviceActivityCenter lets the extension stop monitoring a completed one-time rule.
+    private let center = DeviceActivityCenter()
 
     // iOS calls this when one of our monitored rule intervals starts.
     //
@@ -47,6 +50,9 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         FocusLockDiagnostics.record("DeviceActivityMonitor intervalDidEnd fired for \(activity.rawValue).")
 
         super.intervalDidEnd(for: activity)
+        
+        // Remove a completed one-time rule before recalculating shields.
+        deleteCompletedOneTimeRuleIfNeeded(for: activity)
 
         // Recompute instead of blindly clearing everything.
         //
@@ -97,5 +103,55 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
 
         // Record whether the monitor cleared every shield or applied at least one shield.
         FocusLockDiagnostics.record(hasActiveShields ? "DeviceActivityMonitor applied shields." : "DeviceActivityMonitor cleared shields.")
+    }
+    
+    // Deletes a one-time rule after iOS tells us its interval ended.
+    private func deleteCompletedOneTimeRuleIfNeeded(for activity: DeviceActivityName) {
+        // Pull the rule id out of the DeviceActivityName.
+        guard let endedRuleID = activity.focusLockRuleID else {
+            // Record that this activity was not one of our rule schedules.
+            FocusLockDiagnostics.record("DeviceActivityMonitor could not find a Focus Lock rule id for \(activity.rawValue).")
+            // Stop because there is no rule id to delete.
+            return
+        }
+        
+        // Load the latest rules from shared App Group storage.
+        let rules = FocusLockRuleStore.loadRules()
+        
+        // Find the rule whose schedule just ended.
+        guard let endedRule = rules.first(where: { $0.id == endedRuleID }) else {
+            // Record that the rule may have already been deleted.
+            FocusLockDiagnostics.record("DeviceActivityMonitor found no saved rule for ended activity \(activity.rawValue).")
+            // Stop because there is no saved rule to delete.
+            return
+        }
+        
+        // Only one-time rules should delete themselves after ending.
+        guard endedRule.isOneTime else {
+            // Record that recurring rules stay saved after each interval ends.
+            FocusLockDiagnostics.record("DeviceActivityMonitor leaving recurring rule \(endedRule.id) saved after interval end.")
+            // Stop because recurring rules should keep repeating.
+            return
+        }
+        
+        // Make sure the one-time rule has truly reached its end time.
+        guard FocusLockSchedule.isCompletedOneTimeRule(endedRule) else {
+            // Record that iOS called intervalDidEnd but our schedule math does not consider the rule completed yet.
+            FocusLockDiagnostics.record("DeviceActivityMonitor did not delete one-time rule \(endedRule.id) because it is not completed yet.")
+            // Stop because deleting early would be confusing and risky.
+            return
+        }
+        
+        // Build a new rules array without the completed one-time rule.
+        let remainingRules = rules.filter { $0.id != endedRuleID }
+        
+        // Save the updated rules array back to App Group storage.
+        FocusLockRuleStore.saveRules(remainingRules)
+        
+        // Tell iOS to stop monitoring this completed one-time schedule.
+        center.stopMonitoring([activity])
+        
+        // Record that the one-time rule was removed successfully.
+        FocusLockDiagnostics.record("DeviceActivityMonitor deleted completed one-time rule \(endedRule.id).")
     }
 }

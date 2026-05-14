@@ -125,6 +125,11 @@ struct RulesView: View {
                                 .font(.subheadline)
                                 .foregroundStyle(.gray)
                             
+                            // Shows whether this rule is daily, one-time, or repeats on selected weekdays.
+                            Text(FocusLockSchedule.recurrenceSummary(for: rule))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            
                             
                             // Shows how many picker items this rule contains.
                             Text(selectedActivitySummary(for: rule))
