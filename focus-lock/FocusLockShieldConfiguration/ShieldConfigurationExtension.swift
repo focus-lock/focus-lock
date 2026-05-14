@@ -17,26 +17,32 @@ class ShieldConfigurationExtension: ShieldConfigurationDataSource {
     private func focusLockShieldConfiguration() -> ShieldConfiguration {
         // Returns the title, subtitle, button text, and button color for the shield screen.
         return ShieldConfiguration(
-            // Matches the title currently shown in BlockedView.
+            // Uses a deep focus color behind the shield screen instead of the default background.
+            backgroundColor: UIColor(red: 0.05, green: 0.09, blue: 0.12, alpha: 1.0),
+            
+            // Shows a lock-and-shield symbol so the screen feels protected, not like a timer.
+            icon: UIImage(systemName: "lock.shield.fill"),
+            
+            // Shows a calm title that makes the block feel intentional.
             title: .init(
-                text: "App is blocked",
-                color: .label
+                text: "Focus Lock is active",
+                color: .white
             ),
 
-            // Adds a short explanation because shield screens support a subtitle area.
+            // Reminds the user that this block protects the focus session they chose.
             subtitle: .init(
-                text: "Focus Lock is keeping you away from this app.",
-                color: .secondaryLabel
+                text: "You locked this app",
+                color: .lightText
             ),
 
-            // Matches the button currently shown in BlockedView.
+            // Keeps the current unlock payment action for now.
             primaryButtonLabel: .init(
                 text: "Pay $5 to unlock",
                 color: .white
             ),
 
-            // Makes the primary action look like a real call-to-action button.
-            primaryButtonBackgroundColor: .systemBlue
+            // Uses a focused green button color that stands out against the dark background.
+            primaryButtonBackgroundColor: UIColor(red: 0.10, green: 0.55, blue: 0.35, alpha: 1.0)
         )
     }
     
