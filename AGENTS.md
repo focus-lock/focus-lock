@@ -24,6 +24,7 @@ As of PR #35, the app has:
 - shared rule storage using an App Group
 - a long-form learning doc at `docs/device-activity-enforcement-deep-dive.md`
 - an MVP 1 product vision doc at `docs/mvp-1-vision.md`
+- Screen Time habits reporting through `FocusLockDeviceActivityReport`
 
 The branch that introduced the DeviceActivity enforcement context was:
 
@@ -45,7 +46,7 @@ App Groups = shared storage between app and extension
 
 ## Target Structure
 
-The Xcode project has three targets:
+The Xcode project has four targets:
 
 ```text
 focus-lock
@@ -60,6 +61,11 @@ FocusLockDeviceActivityMonitor
   DeviceActivity monitor extension.
   Woken by iOS at schedule start/end.
   Reads saved rules from App Group storage and applies/clears shields.
+
+FocusLockDeviceActivityReport
+  DeviceActivity report extension.
+  Renders Screen Time habit analytics for the Habits tab.
+  Receives private activity data from iOS and should not export raw usage data to the main app.
 ```
 
 The shared Swift files live in:
@@ -106,6 +112,15 @@ focus-lock/focus-lock/ScreenTimeShieldManager.swift
 
 focus-lock/FocusLockDeviceActivityMonitor/DeviceActivityMonitorExtension.swift
   Extension callback entrypoint for closed-app enforcement.
+
+focus-lock/FocusLockDeviceActivityReport/DeviceActivityReportExtension.swift
+  Extension entrypoint for Screen Time habits reporting.
+
+focus-lock/FocusLockDeviceActivityReport/FocusLockHabitsReport.swift
+  Aggregates DeviceActivity report data into the Habits tab UI.
+
+focus-lock/focus-lock/Views/HabitsView.swift
+  Main-app Habits tab that hosts DeviceActivityReport.
 
 focus-lock/Shared/Rule.swift
   Shared Rule model.
@@ -278,6 +293,7 @@ Do not commit:
 
 ```text
 .DS_Store
+build/
 xcuserdata/
 *.xcuserstate
 focus-lock/Config/Local.xcconfig

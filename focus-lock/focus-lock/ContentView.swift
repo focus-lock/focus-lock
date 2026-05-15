@@ -29,6 +29,13 @@ struct ContentView: View {
                 .tabItem {
                     Label("Rules", systemImage: "book.closed")
                 }
+
+                NavigationStack {
+                    HabitsView()
+                }
+                .tabItem {
+                    Label("Habits", systemImage: "chart.bar.xaxis")
+                }
             }
             // Inject the shared state into the entire tab hierarchy.
             // Any child view can access it with @EnvironmentObject var appState: AppState

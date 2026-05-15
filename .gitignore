@@ -9,6 +9,8 @@ xcuserdata/
 
 # Xcode and Swift build output
 DerivedData/
+build/
+focus-lock/build/
 .build/
 Packages/
 Package.resolved
