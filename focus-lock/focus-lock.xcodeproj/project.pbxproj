@@ -14,6 +14,10 @@
 		DA0000142FAF00000012076D /* FamilyControls.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DA0000022FAF00000012076D /* FamilyControls.framework */; };
 		DA0000162FAF00000012076D /* ManagedSettings.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F173ED492FAE639A0012076D /* ManagedSettings.framework */; };
 		DA0000172FAF00000012076D /* FamilyControls.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DA0000022FAF00000012076D /* FamilyControls.framework */; };
+		DA0000202FB000000012076D /* FocusLockDeviceActivityReport.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DA0000242FB000000012076D /* FocusLockDeviceActivityReport.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		DA0000212FB000000012076D /* DeviceActivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DA0000012FAF00000012076D /* DeviceActivity.framework */; };
+		DA0000342FB000000012076D /* _DeviceActivity_SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DA0000362FB000000012076D /* _DeviceActivity_SwiftUI.framework */; };
+		DA0000352FB000000012076D /* _DeviceActivity_SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DA0000362FB000000012076D /* _DeviceActivity_SwiftUI.framework */; };
 		F173ED4A2FAE639A0012076D /* ManagedSettings.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F173ED492FAE639A0012076D /* ManagedSettings.framework */; };
 		F173ED4C2FAE639A0012076D /* ManagedSettingsUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F173ED4B2FAE639A0012076D /* ManagedSettingsUI.framework */; };
 		F173ED542FAE639A0012076D /* FocusLockShieldConfiguration.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = F173ED472FAE63990012076D /* FocusLockShieldConfiguration.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -26,6 +30,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = DA0000072FAF00000012076D;
 			remoteInfo = FocusLockDeviceActivityMonitor;
+		};
+		DA0000222FB000000012076D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 71209C192F1429F3008313C6 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DA0000302FB000000012076D;
+			remoteInfo = FocusLockDeviceActivityReport;
 		};
 		F173ED522FAE639A0012076D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -45,6 +56,7 @@
 			files = (
 				F173ED542FAE639A0012076D /* FocusLockShieldConfiguration.appex in Embed Foundation Extensions */,
 				DA0000102FAF00000012076D /* FocusLockDeviceActivityMonitor.appex in Embed Foundation Extensions */,
+				DA0000202FB000000012076D /* FocusLockDeviceActivityReport.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -60,6 +72,8 @@
 		DA0000012FAF00000012076D /* DeviceActivity.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DeviceActivity.framework; path = System/Library/Frameworks/DeviceActivity.framework; sourceTree = SDKROOT; };
 		DA0000022FAF00000012076D /* FamilyControls.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = FamilyControls.framework; path = System/Library/Frameworks/FamilyControls.framework; sourceTree = SDKROOT; };
 		DA0000042FAF00000012076D /* FocusLockDeviceActivityMonitor.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = FocusLockDeviceActivityMonitor.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		DA0000242FB000000012076D /* FocusLockDeviceActivityReport.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = FocusLockDeviceActivityReport.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		DA0000362FB000000012076D /* _DeviceActivity_SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = _DeviceActivity_SwiftUI.framework; path = System/Library/Frameworks/_DeviceActivity_SwiftUI.framework; sourceTree = SDKROOT; };
 		F173ED472FAE63990012076D /* FocusLockShieldConfiguration.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = FocusLockShieldConfiguration.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		F173ED492FAE639A0012076D /* ManagedSettings.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ManagedSettings.framework; path = System/Library/Frameworks/ManagedSettings.framework; sourceTree = SDKROOT; };
 		F173ED4B2FAE639A0012076D /* ManagedSettingsUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ManagedSettingsUI.framework; path = System/Library/Frameworks/ManagedSettingsUI.framework; sourceTree = SDKROOT; };
@@ -72,6 +86,13 @@
 				Info.plist,
 			);
 			target = DA0000072FAF00000012076D /* FocusLockDeviceActivityMonitor */;
+		};
+		DA0000252FB000000012076D /* Exceptions for "FocusLockDeviceActivityReport" folder in "FocusLockDeviceActivityReport" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = DA0000302FB000000012076D /* FocusLockDeviceActivityReport */;
 		};
 		F173ED582FAE639A0012076D /* Exceptions for "FocusLockShieldConfiguration" folder in "FocusLockShieldConfiguration" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
@@ -101,6 +122,14 @@
 			path = FocusLockDeviceActivityMonitor;
 			sourceTree = "<group>";
 		};
+		DA0000262FB000000012076D /* FocusLockDeviceActivityReport */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				DA0000252FB000000012076D /* Exceptions for "FocusLockDeviceActivityReport" folder in "FocusLockDeviceActivityReport" target */,
+			);
+			path = FocusLockDeviceActivityReport;
+			sourceTree = "<group>";
+		};
 		F173ED4D2FAE639A0012076D /* FocusLockShieldConfiguration */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -117,6 +146,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DA0000112FAF00000012076D /* DeviceActivity.framework in Frameworks */,
+				DA0000342FB000000012076D /* _DeviceActivity_SwiftUI.framework in Frameworks */,
 				DA0000162FAF00000012076D /* ManagedSettings.framework in Frameworks */,
 				DA0000172FAF00000012076D /* FamilyControls.framework in Frameworks */,
 			);
@@ -129,6 +159,15 @@
 				DA0000122FAF00000012076D /* DeviceActivity.framework in Frameworks */,
 				DA0000132FAF00000012076D /* ManagedSettings.framework in Frameworks */,
 				DA0000142FAF00000012076D /* FamilyControls.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DA0000272FB000000012076D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DA0000212FB000000012076D /* DeviceActivity.framework in Frameworks */,
+				DA0000352FB000000012076D /* _DeviceActivity_SwiftUI.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -152,6 +191,7 @@
 				71209C232F1429F3008313C6 /* focus-lock */,
 				F173ED4D2FAE639A0012076D /* FocusLockShieldConfiguration */,
 				DA0000052FAF00000012076D /* FocusLockDeviceActivityMonitor */,
+				DA0000262FB000000012076D /* FocusLockDeviceActivityReport */,
 				F173ED482FAE639A0012076D /* Frameworks */,
 				71209C222F1429F3008313C6 /* Products */,
 			);
@@ -163,6 +203,7 @@
 				71209C212F1429F3008313C6 /* focus-lock.app */,
 				F173ED472FAE63990012076D /* FocusLockShieldConfiguration.appex */,
 				DA0000042FAF00000012076D /* FocusLockDeviceActivityMonitor.appex */,
+				DA0000242FB000000012076D /* FocusLockDeviceActivityReport.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -182,6 +223,7 @@
 			isa = PBXGroup;
 			children = (
 				DA0000012FAF00000012076D /* DeviceActivity.framework */,
+				DA0000362FB000000012076D /* _DeviceActivity_SwiftUI.framework */,
 				DA0000022FAF00000012076D /* FamilyControls.framework */,
 				F173ED492FAE639A0012076D /* ManagedSettings.framework */,
 				F173ED4B2FAE639A0012076D /* ManagedSettingsUI.framework */,
@@ -206,6 +248,7 @@
 			dependencies = (
 				F173ED532FAE639A0012076D /* PBXTargetDependency */,
 				DA00000F2FAF00000012076D /* PBXTargetDependency */,
+				DA0000232FB000000012076D /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				71209C232F1429F3008313C6 /* focus-lock */,
@@ -239,6 +282,28 @@
 			);
 			productName = FocusLockDeviceActivityMonitor;
 			productReference = DA0000042FAF00000012076D /* FocusLockDeviceActivityMonitor.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		DA0000302FB000000012076D /* FocusLockDeviceActivityReport */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DA0000332FB000000012076D /* Build configuration list for PBXNativeTarget "FocusLockDeviceActivityReport" */;
+			buildPhases = (
+				DA0000282FB000000012076D /* Sources */,
+				DA0000272FB000000012076D /* Frameworks */,
+				DA0000292FB000000012076D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				DA0000262FB000000012076D /* FocusLockDeviceActivityReport */,
+			);
+			name = FocusLockDeviceActivityReport;
+			packageProductDependencies = (
+			);
+			productName = FocusLockDeviceActivityReport;
+			productReference = DA0000242FB000000012076D /* FocusLockDeviceActivityReport.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
 		F173ED462FAE63990012076D /* FocusLockShieldConfiguration */ = {
@@ -289,6 +354,9 @@
 							};
 						};
 					};
+					DA0000302FB000000012076D = {
+						CreatedOnToolsVersion = 26.2;
+					};
 					F173ED462FAE63990012076D = {
 						CreatedOnToolsVersion = 26.2;
 					};
@@ -311,6 +379,7 @@
 				71209C202F1429F3008313C6 /* focus-lock */,
 				F173ED462FAE63990012076D /* FocusLockShieldConfiguration */,
 				DA0000072FAF00000012076D /* FocusLockDeviceActivityMonitor */,
+				DA0000302FB000000012076D /* FocusLockDeviceActivityReport */,
 			);
 		};
 /* End PBXProject section */
@@ -324,6 +393,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		DA00000A2FAF00000012076D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DA0000292FB000000012076D /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -354,6 +430,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		DA0000282FB000000012076D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F173ED432FAE63990012076D /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -368,6 +451,11 @@
 			isa = PBXTargetDependency;
 			target = DA0000072FAF00000012076D /* FocusLockDeviceActivityMonitor */;
 			targetProxy = DA00000E2FAF00000012076D /* PBXContainerItemProxy */;
+		};
+		DA0000232FB000000012076D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DA0000302FB000000012076D /* FocusLockDeviceActivityReport */;
+			targetProxy = DA0000222FB000000012076D /* PBXContainerItemProxy */;
 		};
 		F173ED532FAE639A0012076D /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -599,6 +687,43 @@
 			};
 			name = Release;
 		};
+		DA0000312FB000000012076D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 71209C302F1429F4008313C6 /* Shared.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = FocusLockDeviceActivityReport/FocusLockDeviceActivityReport.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = FocusLockDeviceActivityReport/Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APP_BUNDLE_ID).FocusLockDeviceActivityReport";
+				PRODUCT_NAME = FocusLockDeviceActivityReport;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		DA0000322FB000000012076D /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 71209C302F1429F4008313C6 /* Shared.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = FocusLockDeviceActivityReport/FocusLockDeviceActivityReport.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = FocusLockDeviceActivityReport/Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APP_BUNDLE_ID).FocusLockDeviceActivityReport";
+				PRODUCT_NAME = FocusLockDeviceActivityReport;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 		F173EDE62FAFD0260012076D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 71209C302F1429F4008313C6 /* Shared.xcconfig */;
@@ -654,6 +779,15 @@
 			buildConfigurations = (
 				DA00000C2FAF00000012076D /* Debug */,
 				DA00000D2FAF00000012076D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		DA0000332FB000000012076D /* Build configuration list for PBXNativeTarget "FocusLockDeviceActivityReport" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DA0000312FB000000012076D /* Debug */,
+				DA0000322FB000000012076D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
