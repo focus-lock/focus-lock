@@ -117,20 +117,18 @@ struct FocusLockHabitsReportView: View {
     let configuration: FocusLockHabitsConfiguration
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                if let lastUpdatedDate = configuration.lastUpdatedDate {
-                    Text("Updated \(lastUpdatedDate.formatted(date: .omitted, time: .shortened))")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-
-                summaryGrid
-
-                appsSection
+        VStack(alignment: .leading, spacing: 18) {
+            if let lastUpdatedDate = configuration.lastUpdatedDate {
+                Text("Updated \(lastUpdatedDate.formatted(date: .omitted, time: .shortened))")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
-            .padding(.bottom, 120)
+
+            summaryGrid
+
+            appsSection
         }
+        .padding(.top, 72)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
@@ -169,7 +167,7 @@ struct FocusLockHabitsReportView: View {
     private var appsSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("Apps")
+                Text("Top apps")
                     .font(.headline)
             }
 
@@ -193,7 +191,7 @@ struct FocusLockHabitsReportView: View {
     }
 
     private var visibleApps: [FocusLockAppActivityRow] {
-        configuration.apps
+        Array(configuration.apps.prefix(5))
     }
 
     private var columns: [GridItem] {
@@ -204,13 +202,13 @@ struct FocusLockHabitsReportView: View {
     }
 
     private func metricTile(title: String, value: String, systemImage: String, tint: Color) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 6) {
             Image(systemName: systemImage)
-                .font(.headline)
+                .font(.subheadline)
                 .foregroundStyle(tint)
 
             Text(value)
-                .font(.title3.bold())
+                .font(.headline.bold())
                 .monospacedDigit()
                 .lineLimit(1)
                 .minimumScaleFactor(0.75)
@@ -221,8 +219,8 @@ struct FocusLockHabitsReportView: View {
                 .lineLimit(2)
                 .minimumScaleFactor(0.85)
         }
-        .padding(14)
-        .frame(maxWidth: .infinity, minHeight: 118, alignment: .leading)
+        .padding(10)
+        .frame(maxWidth: .infinity, minHeight: 88, alignment: .leading)
         .background(Color(.tertiarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
     }

@@ -18,6 +18,7 @@ struct HabitsView: View {
             rangePicker
 
             DeviceActivityReport(.focusLockHabits, filter: selectedRange.filter)
+                .id(selectedRange.rawValue)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .padding(20)
