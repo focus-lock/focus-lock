@@ -12,33 +12,42 @@ struct HabitsView: View {
     @State private var selectedRange: HabitRange = .today
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            header
-
+        // Keep Habits as one fixed dashboard. DeviceActivityReport is hosted by
+        // a separate extension process, and scroll gestures across that boundary
+        // were unreliable on a real iPhone.
+        VStack(alignment: .leading, spacing: 12) {
             rangePicker
 
-            DeviceActivityReport(.focusLockHabits, filter: selectedRange.filter)
-                .id(selectedRange.rawValue)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            ZStack {
+                // DeviceActivityReport does not expose a loading callback to the
+                // main app. This remains visible behind the report until Apple's
+                // extension host finishes rendering its opaque content.
+                VStack(spacing: 10) {
+                    ProgressView()
+
+                    Text("Loading activity...")
+                        .font(.subheadline.weight(.medium))
+
+                    Text("Weekly and monthly reports may take a moment.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+
+                DeviceActivityReport(.focusLockHabits, filter: selectedRange.filter)
+                    // Recreate Apple's report host when the range changes so old
+                    // Today/Week/Month results do not remain on screen.
+                    .id(selectedRange.rawValue)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .padding(20)
+        .padding(.horizontal, 20)
+        .padding(.top, 8)
         .background(Color(.systemGroupedBackground))
-        .safeAreaPadding(.bottom, 96)
+        .safeAreaPadding(.bottom, 88)
         .navigationTitle("Habits")
         .navigationBarTitleDisplayMode(.inline)
-    }
-
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("Screen habits")
-                .font(.largeTitle.bold())
-
-            Text("See where your attention is going, then tune your rules around the real patterns.")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var rangePicker: some View {
