@@ -117,7 +117,7 @@ struct FocusLockHabitsReportView: View {
     let configuration: FocusLockHabitsConfiguration
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
+        VStack(alignment: .leading, spacing: 12) {
             if let lastUpdatedDate = configuration.lastUpdatedDate {
                 Text("Updated \(lastUpdatedDate.formatted(date: .omitted, time: .shortened))")
                     .font(.caption)
@@ -128,12 +128,13 @@ struct FocusLockHabitsReportView: View {
 
             appsSection
         }
-        .padding(.top, 72)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        // Cover the main app's loading indicator once this extension view is ready.
+        .background(Color(.systemGroupedBackground))
     }
 
     private var summaryGrid: some View {
-        LazyVGrid(columns: columns, spacing: 12) {
+        LazyVGrid(columns: columns, spacing: 8) {
             metricTile(
                 title: "Screen time",
                 value: formattedDuration(configuration.totalActivityDuration),
@@ -165,7 +166,7 @@ struct FocusLockHabitsReportView: View {
     }
 
     private var appsSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Text("Top apps")
                     .font(.headline)
@@ -196,13 +197,13 @@ struct FocusLockHabitsReportView: View {
 
     private var columns: [GridItem] {
         [
-            GridItem(.flexible(), spacing: 12),
-            GridItem(.flexible(), spacing: 12)
+            GridItem(.flexible(), spacing: 8),
+            GridItem(.flexible(), spacing: 8)
         ]
     }
 
     private func metricTile(title: String, value: String, systemImage: String, tint: Color) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 4) {
             Image(systemName: systemImage)
                 .font(.subheadline)
                 .foregroundStyle(tint)
@@ -219,14 +220,14 @@ struct FocusLockHabitsReportView: View {
                 .lineLimit(2)
                 .minimumScaleFactor(0.85)
         }
-        .padding(10)
-        .frame(maxWidth: .infinity, minHeight: 88, alignment: .leading)
+        .padding(8)
+        .frame(maxWidth: .infinity, minHeight: 72, alignment: .leading)
         .background(Color(.tertiarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 
     private func appRow(_ app: FocusLockAppActivityRow) -> some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 10) {
             appIcon(app)
 
             VStack(alignment: .leading, spacing: 6) {
@@ -243,14 +244,14 @@ struct FocusLockHabitsReportView: View {
                 .foregroundStyle(.secondary)
             }
 
-            Spacer(minLength: 12)
+            Spacer(minLength: 8)
 
             Text(formattedDuration(app.duration))
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.secondary)
                 .monospacedDigit()
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, 5)
     }
 
     @ViewBuilder
@@ -258,12 +259,12 @@ struct FocusLockHabitsReportView: View {
         if let token = app.token {
             Label(token)
                 .labelStyle(.iconOnly)
-                .frame(width: 34, height: 34)
+                .frame(width: 30, height: 30)
         } else {
             Image(systemName: "app.dashed")
                 .font(.headline)
                 .foregroundStyle(.secondary)
-                .frame(width: 34, height: 34)
+                .frame(width: 30, height: 30)
                 .background(Color(.tertiarySystemGroupedBackground))
                 .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         }
