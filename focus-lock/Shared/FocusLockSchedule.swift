@@ -67,6 +67,11 @@ enum FocusLockSchedule {
         // Checks that the rule is long enough for DeviceActivity.
         let hasEnoughDuration = durationMinutes(for: rule) >= minimumMonitorDurationMinutes
 
+        // Usage-limit rules do not use recurrence settings, but they still need a valid limit.
+        if rule.ruleKind == .usageLimit {
+            return isEnabled && hasActivity && hasEnoughDuration
+        }
+
         // Checks that recurrence data is valid.
         let recurrenceIsValid = hasValidRecurrence(rule)
 
@@ -91,6 +96,11 @@ enum FocusLockSchedule {
 
     // Checks whether the current time is inside this rule's blocking window.
     static func isActive(_ rule: Rule, now: Date = Date()) -> Bool {
+        // Usage-limit rules become active only after iOS tells us today's limit was reached.
+        if rule.ruleKind == .usageLimit {
+            return hasReachedUsageLimitToday(rule, now: now)
+        }
+
         // Uses exact dates for one-time rules.
         if rule.isOneTime {
             // Returns whether this exact one-time session is active now.
@@ -166,6 +176,11 @@ enum FocusLockSchedule {
 
     // Builds the DeviceActivity schedule that iOS will monitor.
     static func schedule(for rule: Rule) -> DeviceActivitySchedule {
+        // Usage-limit rules count selected activity across the current day.
+        if rule.ruleKind == .usageLimit {
+            return dailyUsageLimitSchedule()
+        }
+
         // Uses a non-repeating schedule for a one-time rule.
         if rule.isOneTime {
             // Creates one exact calendar interval for iOS to monitor.
@@ -192,6 +207,11 @@ enum FocusLockSchedule {
 
     // Calculates how many minutes the rule lasts.
     static func durationMinutes(for rule: Rule) -> Int {
+        // Usage-limit rules store their allowed daily screen time directly.
+        if rule.ruleKind == .usageLimit {
+            return rule.usageLimitMinutes ?? 0
+        }
+
         // Converts the start time into minutes after midnight.
         let startMinutes = minutesSinceMidnight(rule.startTime)
 
@@ -216,6 +236,11 @@ enum FocusLockSchedule {
 
     // Checks whether a one-time rule has already finished.
     static func isCompletedOneTimeRule(_ rule: Rule, now: Date = Date()) -> Bool {
+        // Usage-limit rules reset daily instead of completing once.
+        guard rule.ruleKind == .scheduled else {
+            return false
+        }
+
         // Recurring rules never complete once.
         guard rule.isOneTime else {
             // Tells the caller this is not a completed one-time rule.
@@ -234,6 +259,11 @@ enum FocusLockSchedule {
 
     // Builds display text that explains how a rule repeats.
     static func recurrenceSummary(for rule: Rule) -> String {
+        // Usage-limit rules reset every day.
+        if rule.ruleKind == .usageLimit {
+            return "Daily usage limit"
+        }
+
         // Handles one-time rules first.
         if rule.isOneTime {
             // Checks whether the one-time rule has a saved date.
@@ -278,6 +308,55 @@ enum FocusLockSchedule {
 
         // Joins labels into text like "Mon, Wed, Fri".
         return labels.joined(separator: ", ")
+    }
+
+    // Checks whether a usage-limit rule has reached its limit during the current day.
+    static func hasReachedUsageLimitToday(_ rule: Rule, now: Date = Date()) -> Bool {
+        // Only usage-limit rules use usageLimitReachedAt.
+        guard rule.ruleKind == .usageLimit else {
+            return false
+        }
+
+        // Reads the last threshold date.
+        guard let reachedAt = rule.usageLimitReachedAt else {
+            return false
+        }
+
+        // The rule blocks only for the calendar day when the threshold was reached.
+        return Calendar.current.isDate(reachedAt, inSameDayAs: now)
+    }
+
+    // Returns a copy of rules with stale usage-limit reached flags cleared.
+    static func clearingExpiredUsageLimitState(from rules: [Rule], now: Date = Date()) -> [Rule] {
+        rules.map { rule in
+            var cleanedRule = rule
+
+            guard cleanedRule.ruleKind == .usageLimit,
+                  let reachedAt = cleanedRule.usageLimitReachedAt,
+                  !Calendar.current.isDate(reachedAt, inSameDayAs: now) else {
+                return cleanedRule
+            }
+
+            cleanedRule.usageLimitReachedAt = nil
+            return cleanedRule
+        }
+    }
+
+    // Builds the daily threshold event for a usage-limit rule.
+    static func usageLimitEvent(for rule: Rule) -> DeviceActivityEvent? {
+        // Usage-limit rules need a positive minute threshold.
+        guard rule.ruleKind == .usageLimit,
+              let usageLimitMinutes = rule.usageLimitMinutes,
+              usageLimitMinutes >= minimumMonitorDurationMinutes else {
+            return nil
+        }
+
+        return DeviceActivityEvent(
+            applications: rule.activitySelection.applicationTokens,
+            categories: rule.activitySelection.categoryTokens,
+            webDomains: rule.activitySelection.webDomainTokens,
+            threshold: DateComponents(minute: usageLimitMinutes)
+        )
     }
 
     // Checks whether a one-time rule is active right now.
@@ -459,6 +538,15 @@ enum FocusLockSchedule {
         // Builds the smaller DateComponents value DeviceActivity expects.
         return DateComponents(hour: components.hour, minute: components.minute)
     }
+
+    // Creates a repeating all-day schedule for daily usage limits.
+    private static func dailyUsageLimitSchedule() -> DeviceActivitySchedule {
+        DeviceActivitySchedule(
+            intervalStart: DateComponents(hour: 0, minute: 0),
+            intervalEnd: DateComponents(hour: 23, minute: 59),
+            repeats: true
+        )
+    }
 }
 
 // Adds Focus Lock helpers to Apple's DeviceActivityName type.
@@ -490,6 +578,32 @@ extension DeviceActivityName {
         let idString = rawValue.replacingOccurrences(of: Self.focusLockRulePrefix, with: "")
 
         // Converts the UUID text back into a UUID value.
+        return UUID(uuidString: idString)
+    }
+}
+
+// Adds Focus Lock helpers to Apple's DeviceActivityEvent.Name type.
+extension DeviceActivityEvent.Name {
+    // Stores the prefix used for every Focus Lock usage-limit threshold event.
+    private static let focusLockUsageLimitPrefix = "focus-lock-usage-limit-"
+
+    // Builds a DeviceActivityEvent.Name from a rule id.
+    init(usageLimitRuleID: UUID) {
+        self.init(Self.focusLockUsageLimitPrefix + usageLimitRuleID.uuidString)
+    }
+
+    // Checks whether this event belongs to a Focus Lock usage-limit rule.
+    var isFocusLockUsageLimitEvent: Bool {
+        rawValue.hasPrefix(Self.focusLockUsageLimitPrefix)
+    }
+
+    // Pulls the original rule id back out of the event name.
+    var focusLockUsageLimitRuleID: UUID? {
+        guard isFocusLockUsageLimitEvent else {
+            return nil
+        }
+
+        let idString = rawValue.replacingOccurrences(of: Self.focusLockUsageLimitPrefix, with: "")
         return UUID(uuidString: idString)
     }
 }
