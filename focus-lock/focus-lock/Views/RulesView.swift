@@ -57,7 +57,7 @@ struct RulesView: View {
             case .active:
                 return "Blocking distractions right now"
             case .limitAvailable:
-                return "Will block after the daily limit is reached"
+                return "Counting from when this rule was saved today"
             case .scheduled:
                 return "Will turn on at the next scheduled time"
             case .disabled:
@@ -302,6 +302,17 @@ struct RulesView: View {
                                 Text(selectedActivitySummary(for: rule))
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
+
+                                if shouldShowBlockForTodayButton(for: rule, now: timeline.date) {
+                                    Button {
+                                        appState.blockUsageLimitRuleForToday(id: rule.id)
+                                    } label: {
+                                        Label("Block for Today", systemImage: "lock.fill")
+                                            .font(.caption.weight(.semibold))
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .controlSize(.small)
+                                }
                             }
                             .padding(14)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -418,10 +429,18 @@ struct RulesView: View {
                 return "\(limitMinutes) min limit reached. Blocked until tomorrow."
             }
 
-            return "\(limitMinutes) min daily limit"
+            return "\(limitMinutes) min limit. Counts from now today, then resets daily."
         }
 
         return "\(rule.startTime.formatted(date: .omitted, time: .shortened)) - \(rule.endTime.formatted(date: .omitted, time: .shortened))"
+    }
+
+    // Shows the manual block action only when a usage-limit rule is ready but not blocked yet.
+    private func shouldShowBlockForTodayButton(for rule: Rule, now: Date) -> Bool {
+        rule.ruleKind == .usageLimit &&
+        rule.isEnabled &&
+        invalidReason(for: rule) == nil &&
+        !FocusLockSchedule.hasReachedUsageLimitToday(rule, now: now)
     }
 
     // Finds the next future start time for a rule.

@@ -222,6 +222,19 @@ final class AppState: ObservableObject {
         rules[index].usageLimitReachedAt = nil
     }
 
+    // Manually blocks a usage-limit rule for the rest of today.
+    //
+    // This is useful when the user knows they already used too much time before
+    // Focus Lock started monitoring this rule.
+    func blockUsageLimitRuleForToday(id: UUID) {
+        guard let index = rules.firstIndex(where: { $0.id == id }),
+              rules[index].ruleKind == .usageLimit else {
+            return
+        }
+
+        rules[index].usageLimitReachedAt = Date()
+    }
+
     private func persistAndSyncRules() {
         // 1. Save the latest rules to shared storage.
         //

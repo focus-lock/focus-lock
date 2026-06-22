@@ -117,6 +117,10 @@ struct CreateRuleView: View {
                             TextField("Minutes", value: $customUsageLimitMinutes, format: .number)
                                 .keyboardType(.numberPad)
                         }
+
+                        Text("Today starts counting when this rule is saved. Future days reset daily.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
                 } else {
                     Section("Schedule") {
