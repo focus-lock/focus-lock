@@ -13,8 +13,12 @@ struct CreateRuleView: View {
     @EnvironmentObject var appState: AppState
 
     @State private var ruleName = ""
+    @State private var ruleKind: RuleKind = .scheduled
     @State private var startTime = Calendar.current.date(from: .init(hour: 9, minute: 0))!
     @State private var endTime = Calendar.current.date(from: .init(hour: 17, minute: 0))!
+    @State private var selectedUsageLimitMinutes = 30
+    @State private var customUsageLimitMinutes = 30
+    @State private var isUsingCustomUsageLimit = false
     // Stores the weekdays selected for repeating this rule.
     @State private var repeatWeekdays = Rule.allWeekdays
     // Stores the calendar date used when no repeat weekdays are selected.
@@ -73,6 +77,16 @@ struct CreateRuleView: View {
         repeatWeekdays.isEmpty
     }
 
+    // Returns the selected daily usage limit.
+    private var usageLimitMinutes: Int {
+        isUsingCustomUsageLimit ? customUsageLimitMinutes : selectedUsageLimitMinutes
+    }
+
+    // Returns true when the user is creating a usage-limit rule.
+    private var isUsageLimitRule: Bool {
+        ruleKind == .usageLimit
+    }
+
 
 
     var body: some View {
@@ -80,37 +94,65 @@ struct CreateRuleView: View {
             Form {
                 Section("Rule Details") {
                     TextField("Rule Name", text: $ruleName)
-                }
 
-                Section("Schedule") {
-                    DatePicker("Start Time", selection: $startTime, displayedComponents: .hourAndMinute)
-
-                    DatePicker("End Time", selection: $endTime, displayedComponents: .hourAndMinute)
-                    
-                    // Shows a date picker only when the rule is one-time.
-                    if isOneTimeRule {
-                        // Lets the user choose the exact date for the one-time rule.
-                        DatePicker("Date", selection: $oneTimeDate, displayedComponents: .date)
+                    Picker("Rule Type", selection: $ruleKind) {
+                        Text("Schedule").tag(RuleKind.scheduled)
+                        Text("Usage Limit").tag(RuleKind.usageLimit)
                     }
+                    .pickerStyle(.segmented)
                 }
-                
-                // Lets the user open repeat settings from one clean row.
-                Section("Repeat") {
-                    // Opens the repeat settings sheet when tapped.
-                    Button {
-                        // Shows the repeat settings sheet.
-                        showRepeatSettings = true
-                    } label: {
-                        // Places the row title and current repeat summary side by side.
-                        HStack {
-                            // Shows the row title.
-                            Text("Repeat")
-                            // Pushes the summary to the right side.
-                            Spacer()
-                            // Shows the current recurrence choice.
-                            Text(repeatSummary)
-                                // Styles the summary as secondary text.
-                                .foregroundStyle(.secondary)
+
+                if isUsageLimitRule {
+                    Section("Daily Limit") {
+                        Picker("Duration", selection: $selectedUsageLimitMinutes) {
+                            Text("15 min").tag(15)
+                            Text("30 min").tag(30)
+                            Text("1 hour").tag(60)
+                        }
+                        .disabled(isUsingCustomUsageLimit)
+
+                        Toggle("Custom Duration", isOn: $isUsingCustomUsageLimit)
+
+                        if isUsingCustomUsageLimit {
+                            TextField("Minutes", value: $customUsageLimitMinutes, format: .number)
+                                .keyboardType(.numberPad)
+                        }
+
+                        Text("Today starts counting when this rule is saved. Future days reset daily.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                } else {
+                    Section("Schedule") {
+                        DatePicker("Start Time", selection: $startTime, displayedComponents: .hourAndMinute)
+
+                        DatePicker("End Time", selection: $endTime, displayedComponents: .hourAndMinute)
+                        
+                        // Shows a date picker only when the rule is one-time.
+                        if isOneTimeRule {
+                            // Lets the user choose the exact date for the one-time rule.
+                            DatePicker("Date", selection: $oneTimeDate, displayedComponents: .date)
+                        }
+                    }
+                    
+                    // Lets the user open repeat settings from one clean row.
+                    Section("Repeat") {
+                        // Opens the repeat settings sheet when tapped.
+                        Button {
+                            // Shows the repeat settings sheet.
+                            showRepeatSettings = true
+                        } label: {
+                            // Places the row title and current repeat summary side by side.
+                            HStack {
+                                // Shows the row title.
+                                Text("Repeat")
+                                // Pushes the summary to the right side.
+                                Spacer()
+                                // Shows the current recurrence choice.
+                                Text(repeatSummary)
+                                    // Styles the summary as secondary text.
+                                    .foregroundStyle(.secondary)
+                            }
                         }
                     }
                 }
@@ -140,6 +182,22 @@ struct CreateRuleView: View {
 
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
+                        if isUsageLimitRule {
+                            if usageLimitMinutes < FocusLockSchedule.minimumMonitorDurationMinutes {
+                                showDurationAlert = true
+                                return
+                            }
+
+                            appState.addUsageLimitRule(
+                                title: ruleName,
+                                usageLimitMinutes: usageLimitMinutes,
+                                activitySelection: activitySelection
+                            )
+
+                            dismiss()
+                            return
+                        }
+
                         // Create a temporary rule so we can reuse the same duration helper
                         // that the schedule manager uses before saving anything.
                         let draftRule = Rule(

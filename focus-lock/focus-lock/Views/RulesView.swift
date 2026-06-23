@@ -15,7 +15,8 @@ struct RulesView: View {
     
     @State private var ruleBeingEdited: Rule?
     
-    @State private var goToBlocked = false
+    // Blocked screen shortcut temporarily hidden from the Rules page.
+    // @State private var goToBlocked = false
 
     // Describes the user-facing state shown on each rule row.
     //
@@ -24,6 +25,7 @@ struct RulesView: View {
     // this enum would be a good candidate to move into Shared/.
     private enum RuleDisplayStatus {
         case active
+        case limitAvailable
         case scheduled
         case disabled
         case invalid(String)
@@ -34,6 +36,8 @@ struct RulesView: View {
             switch self {
             case .active:
                 return "Active now"
+            case .limitAvailable:
+                return "Available today"
             case .scheduled:
                 return "Scheduled"
             case .disabled:
@@ -52,6 +56,8 @@ struct RulesView: View {
             switch self {
             case .active:
                 return "Blocking distractions right now"
+            case .limitAvailable:
+                return "Counting from when this rule was saved today"
             case .scheduled:
                 return "Will turn on at the next scheduled time"
             case .disabled:
@@ -68,6 +74,8 @@ struct RulesView: View {
             switch self {
             case .active:
                 return "lock.shield.fill"
+            case .limitAvailable:
+                return "hourglass"
             case .scheduled:
                 return "clock.fill"
             case .disabled:
@@ -84,6 +92,8 @@ struct RulesView: View {
             switch self {
             case .active:
                 return .green
+            case .limitAvailable:
+                return .blue
             case .scheduled:
                 return .orange
             case .disabled:
@@ -103,6 +113,8 @@ struct RulesView: View {
             switch self {
             case .active:
                 return .green
+            case .limitAvailable:
+                return .blue
             case .scheduled:
                 return .orange
             case .invalid:
@@ -120,6 +132,8 @@ struct RulesView: View {
             switch self {
             case .active:
                 return .green
+            case .limitAvailable:
+                return .blue
             case .scheduled:
                 return .orange
             default:
@@ -139,7 +153,7 @@ struct RulesView: View {
                 return 0
             case .invalid, .disabled, .completed:
                 return 1
-            case .scheduled:
+            case .limitAvailable, .scheduled:
                 return 2
             }
         }
@@ -274,7 +288,7 @@ struct RulesView: View {
                                     .font(.caption)
                                     .foregroundStyle(status.tint)
                                 
-                                Text("\(rule.startTime, style: .time) - \(rule.endTime, style: .time)")
+                                Text(primaryScheduleText(for: rule, now: timeline.date))
                                     .font(.subheadline)
                                     .foregroundStyle(.gray)
                                 
@@ -288,6 +302,17 @@ struct RulesView: View {
                                 Text(selectedActivitySummary(for: rule))
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
+
+                                if shouldShowBlockForTodayButton(for: rule, now: timeline.date) {
+                                    Button {
+                                        appState.blockUsageLimitRuleForToday(id: rule.id)
+                                    } label: {
+                                        Label("Block for Today", systemImage: "lock.fill")
+                                            .font(.caption.weight(.semibold))
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .controlSize(.small)
+                                }
                             }
                             .padding(14)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -313,13 +338,17 @@ struct RulesView: View {
                 }
             }
             
+            /*
             FocusButton(title: "Blocked Screen") {
                 goToBlocked = true
             }
+            */
         }.padding(20)
+        /*
         .navigationDestination(isPresented: $goToBlocked) {
             BlockedView()
         }
+        */
     }
 
     // Builds the compact colored status pill shown under the rule title.
@@ -359,6 +388,10 @@ struct RulesView: View {
             return .active
         }
 
+        if rule.ruleKind == .usageLimit {
+            return .limitAvailable
+        }
+
         if nextStartDate(for: rule, after: now) != nil {
             return .scheduled
         }
@@ -373,6 +406,10 @@ struct RulesView: View {
         }
 
         if FocusLockSchedule.durationMinutes(for: rule) < FocusLockSchedule.minimumMonitorDurationMinutes {
+            if rule.ruleKind == .usageLimit {
+                return "Daily limit must be at least \(FocusLockSchedule.minimumMonitorDurationMinutes) minutes"
+            }
+
             return "Rule must be at least \(FocusLockSchedule.minimumMonitorDurationMinutes) minutes long"
         }
 
@@ -381,6 +418,29 @@ struct RulesView: View {
         }
 
         return nil
+    }
+
+    // Builds the main time/limit text for a rule card.
+    private func primaryScheduleText(for rule: Rule, now: Date) -> String {
+        if rule.ruleKind == .usageLimit {
+            let limitMinutes = rule.usageLimitMinutes ?? 0
+
+            if FocusLockSchedule.hasReachedUsageLimitToday(rule, now: now) {
+                return "\(limitMinutes) min limit reached. Blocked until tomorrow."
+            }
+
+            return "\(limitMinutes) min limit. Counts from now today, then resets daily."
+        }
+
+        return "\(rule.startTime.formatted(date: .omitted, time: .shortened)) - \(rule.endTime.formatted(date: .omitted, time: .shortened))"
+    }
+
+    // Shows the manual block action only when a usage-limit rule is ready but not blocked yet.
+    private func shouldShowBlockForTodayButton(for rule: Rule, now: Date) -> Bool {
+        rule.ruleKind == .usageLimit &&
+        rule.isEnabled &&
+        invalidReason(for: rule) == nil &&
+        !FocusLockSchedule.hasReachedUsageLimitToday(rule, now: now)
     }
 
     // Finds the next future start time for a rule.

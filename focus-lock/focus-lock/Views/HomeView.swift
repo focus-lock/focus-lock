@@ -408,7 +408,7 @@ struct HomeView: View {
     private func nextUpcomingRule(now: Date) -> UpcomingRule? {
         appState.rules
             // Ignore rules that cannot actually be scheduled or shield anything.
-            .filter { FocusLockSchedule.isMonitorable($0, now: now) }
+            .filter { $0.ruleKind == .scheduled && FocusLockSchedule.isMonitorable($0, now: now) }
             .compactMap { rule -> UpcomingRule? in
                 // Some rules may not have a future start.
                 // Example: a one-time rule whose start already passed.
@@ -478,6 +478,11 @@ struct HomeView: View {
     //
     // This powers the "Scheduled today" tile.
     private func isScheduledToday(_ rule: Rule, now: Date) -> Bool {
+        // Usage-limit rules are available daily, but they do not have a clock start time.
+        guard rule.ruleKind == .scheduled else {
+            return false
+        }
+
         // If iOS would not monitor this rule, we should not count it as scheduled.
         guard FocusLockSchedule.isMonitorable(rule, now: now) else {
             return false

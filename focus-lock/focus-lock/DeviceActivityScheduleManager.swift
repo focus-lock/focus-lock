@@ -66,29 +66,51 @@ final class DeviceActivityScheduleManager {
 
         // Registers or updates every rule that should be monitored.
         for rule in monitorableRules {
-            // Pulls the start hour and minute from the rule.
-            let startComponents = Calendar.current.dateComponents([.hour, .minute], from: rule.startTime)
-
-            // Pulls the end hour and minute from the rule.
-            let endComponents = Calendar.current.dateComponents([.hour, .minute], from: rule.endTime)
-
             // Builds the unique DeviceActivity name for this rule.
             let activityName = DeviceActivityName(ruleID: rule.id)
 
-            // Records the schedule registration details for debugging.
-            FocusLockDiagnostics.record(
-                "ScheduleManager registering rule \(rule.id) as \(activityName.rawValue), start=\(startComponents.hour ?? -1):\(startComponents.minute ?? -1), end=\(endComponents.hour ?? -1):\(endComponents.minute ?? -1), selectedApps=\(rule.activitySelection.applicationTokens.count), recurrence=\(FocusLockSchedule.recurrenceSummary(for: rule))."
-            )
-
             // Starts a block that can catch schedule registration errors.
             do {
-                // Tells iOS to monitor this rule's schedule.
-                try center.startMonitoring(
-                    // Passes the unique name for this rule's schedule.
-                    activityName,
-                    // Passes either a repeating or one-time schedule.
-                    during: FocusLockSchedule.schedule(for: rule)
-                )
+                if rule.ruleKind == .usageLimit {
+                    // Build the daily usage threshold event for this rule.
+                    guard let usageLimitEvent = FocusLockSchedule.usageLimitEvent(for: rule) else {
+                        FocusLockDiagnostics.record("ScheduleManager could not build usage-limit event for rule \(rule.id).")
+                        continue
+                    }
+
+                    let eventName = DeviceActivityEvent.Name(usageLimitRuleID: rule.id)
+
+                    FocusLockDiagnostics.record(
+                        "ScheduleManager registering usage-limit rule \(rule.id) as \(activityName.rawValue), event=\(eventName.rawValue), limitMinutes=\(rule.usageLimitMinutes ?? 0), selectedApps=\(rule.activitySelection.applicationTokens.count), selectedCategories=\(rule.activitySelection.categoryTokens.count), selectedWebDomains=\(rule.activitySelection.webDomainTokens.count)."
+                    )
+
+                    // Tells iOS to count selected activity and call the monitor extension
+                    // when the threshold is reached inside the daily schedule.
+                    try center.startMonitoring(
+                        activityName,
+                        during: FocusLockSchedule.schedule(for: rule),
+                        events: [eventName: usageLimitEvent]
+                    )
+                } else {
+                    // Pulls the start hour and minute from the rule.
+                    let startComponents = Calendar.current.dateComponents([.hour, .minute], from: rule.startTime)
+
+                    // Pulls the end hour and minute from the rule.
+                    let endComponents = Calendar.current.dateComponents([.hour, .minute], from: rule.endTime)
+
+                    // Records the schedule registration details for debugging.
+                    FocusLockDiagnostics.record(
+                        "ScheduleManager registering scheduled rule \(rule.id) as \(activityName.rawValue), start=\(startComponents.hour ?? -1):\(startComponents.minute ?? -1), end=\(endComponents.hour ?? -1):\(endComponents.minute ?? -1), selectedApps=\(rule.activitySelection.applicationTokens.count), recurrence=\(FocusLockSchedule.recurrenceSummary(for: rule))."
+                    )
+
+                    // Tells iOS to monitor this rule's schedule.
+                    try center.startMonitoring(
+                        // Passes the unique name for this rule's schedule.
+                        activityName,
+                        // Passes either a repeating or one-time schedule.
+                        during: FocusLockSchedule.schedule(for: rule)
+                    )
+                }
 
                 // Records that iOS accepted the schedule.
                 FocusLockDiagnostics.record("ScheduleManager successfully registered \(activityName.rawValue).")

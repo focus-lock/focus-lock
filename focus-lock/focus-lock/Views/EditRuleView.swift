@@ -23,6 +23,9 @@ struct EditRuleView: View {
     // Stores the editable rule name while the user types.
     @State private var ruleName: String
 
+    // Stores whether this rule is scheduled or a daily usage limit.
+    @State private var ruleKind: RuleKind
+
     // Stores the editable start time while the user changes it.
     @State private var startTime: Date
 
@@ -37,6 +40,15 @@ struct EditRuleView: View {
     
     // Stores the editable date for a one-time rule.
     @State private var oneTimeDate: Date
+
+    // Stores the selected preset daily usage limit.
+    @State private var selectedUsageLimitMinutes: Int
+
+    // Stores the custom daily usage limit.
+    @State private var customUsageLimitMinutes: Int
+
+    // Tracks whether the custom duration control is active.
+    @State private var isUsingCustomUsageLimit: Bool
 
     // Tracks whether Apple's Screen Time picker should be visible.
     @State private var showAppPicker = false
@@ -94,6 +106,16 @@ struct EditRuleView: View {
         repeatWeekdays.isEmpty
     }
 
+    // Returns the selected daily usage limit.
+    private var usageLimitMinutes: Int {
+        isUsingCustomUsageLimit ? customUsageLimitMinutes : selectedUsageLimitMinutes
+    }
+
+    // Returns true when the user is editing a usage-limit rule.
+    private var isUsageLimitRule: Bool {
+        ruleKind == .usageLimit
+    }
+
 
 
     // Runs when this edit screen is created with a specific rule.
@@ -103,6 +125,9 @@ struct EditRuleView: View {
 
         // Fills the text field with the rule's current title.
         _ruleName = State(initialValue: rule.title)
+
+        // Fills the rule type picker with the rule's current kind.
+        _ruleKind = State(initialValue: rule.ruleKind)
 
         // Fills the start picker with the rule's current start time.
         _startTime = State(initialValue: rule.startTime)
@@ -118,6 +143,13 @@ struct EditRuleView: View {
         
         // Fills the one-time date picker with the saved date, or today if there is no saved date yet.
         _oneTimeDate = State(initialValue: rule.oneTimeDate ?? Date())
+
+        let savedUsageLimitMinutes = rule.usageLimitMinutes ?? 30
+        let presetUsageLimitMinutes = [15, 30, 60].contains(savedUsageLimitMinutes) ? savedUsageLimitMinutes : 30
+
+        _selectedUsageLimitMinutes = State(initialValue: presetUsageLimitMinutes)
+        _customUsageLimitMinutes = State(initialValue: max(savedUsageLimitMinutes, FocusLockSchedule.minimumMonitorDurationMinutes))
+        _isUsingCustomUsageLimit = State(initialValue: ![15, 30, 60].contains(savedUsageLimitMinutes))
     }
 
     // Describes the UI that appears inside the edit sheet.
@@ -130,40 +162,68 @@ struct EditRuleView: View {
                 Section("Rule Details") {
                     // Lets the user change the rule name.
                     TextField("Rule Name", text: $ruleName)
-                }
 
-                // Groups the time pickers under a Schedule heading.
-                Section("Schedule") {
-                    // Lets the user change the start time.
-                    DatePicker("Start Time", selection: $startTime, displayedComponents: .hourAndMinute)
-
-                    // Lets the user change the end time.
-                    DatePicker("End Time", selection: $endTime, displayedComponents: .hourAndMinute)
-                    
-                    // Shows a date picker only when the edited rule is one-time.
-                    if isOneTimeRule {
-                        // Lets the user choose the exact date for the one-time rule.
-                        DatePicker("Date", selection: $oneTimeDate, displayedComponents: .date)
+                    Picker("Rule Type", selection: $ruleKind) {
+                        Text("Schedule").tag(RuleKind.scheduled)
+                        Text("Usage Limit").tag(RuleKind.usageLimit)
                     }
+                    .pickerStyle(.segmented)
                 }
-                
-                // Groups recurrence controls under a Repeat heading.
-                Section("Repeat") {
-                    // Opens the repeat settings sheet when tapped.
-                    Button {
-                        // Shows the repeat settings sheet.
-                        showRepeatSettings = true
-                    } label: {
-                        // Places the row title and current repeat summary side by side.
-                        HStack {
-                            // Shows the row title.
-                            Text("Repeat")
-                            // Pushes the summary to the right side.
-                            Spacer()
-                            // Shows the current recurrence choice.
-                            Text(repeatSummary)
-                                // Styles the summary as secondary text.
-                                .foregroundStyle(.secondary)
+
+                if isUsageLimitRule {
+                    Section("Daily Limit") {
+                        Picker("Duration", selection: $selectedUsageLimitMinutes) {
+                            Text("15 min").tag(15)
+                            Text("30 min").tag(30)
+                            Text("1 hour").tag(60)
+                        }
+                        .disabled(isUsingCustomUsageLimit)
+
+                        Toggle("Custom Duration", isOn: $isUsingCustomUsageLimit)
+
+                        if isUsingCustomUsageLimit {
+                            TextField("Minutes", value: $customUsageLimitMinutes, format: .number)
+                                .keyboardType(.numberPad)
+                        }
+
+                        Text("Today starts counting when this rule is saved. Future days reset daily.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                } else {
+                    // Groups the time pickers under a Schedule heading.
+                    Section("Schedule") {
+                        // Lets the user change the start time.
+                        DatePicker("Start Time", selection: $startTime, displayedComponents: .hourAndMinute)
+
+                        // Lets the user change the end time.
+                        DatePicker("End Time", selection: $endTime, displayedComponents: .hourAndMinute)
+                        
+                        // Shows a date picker only when the edited rule is one-time.
+                        if isOneTimeRule {
+                            // Lets the user choose the exact date for the one-time rule.
+                            DatePicker("Date", selection: $oneTimeDate, displayedComponents: .date)
+                        }
+                    }
+                    
+                    // Groups recurrence controls under a Repeat heading.
+                    Section("Repeat") {
+                        // Opens the repeat settings sheet when tapped.
+                        Button {
+                            // Shows the repeat settings sheet.
+                            showRepeatSettings = true
+                        } label: {
+                            // Places the row title and current repeat summary side by side.
+                            HStack {
+                                // Shows the row title.
+                                Text("Repeat")
+                                // Pushes the summary to the right side.
+                                Spacer()
+                                // Shows the current recurrence choice.
+                                Text(repeatSummary)
+                                    // Styles the summary as secondary text.
+                                    .foregroundStyle(.secondary)
+                            }
                         }
                     }
                 }
@@ -209,6 +269,23 @@ struct EditRuleView: View {
                 // Places this item where Save actions normally appear.
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
+                        if isUsageLimitRule {
+                            if usageLimitMinutes < FocusLockSchedule.minimumMonitorDurationMinutes {
+                                showDurationAlert = true
+                                return
+                            }
+
+                            appState.editUsageLimitRule(
+                                id: rule.id,
+                                title: ruleName,
+                                usageLimitMinutes: usageLimitMinutes,
+                                activitySelection: activitySelection
+                            )
+
+                            dismiss()
+                            return
+                        }
+
                         // Create a temporary version of the edited rule so we can check the
                         // new start/end time before changing the saved rule.
                         let draftRule = Rule(

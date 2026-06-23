@@ -7,6 +7,9 @@
 // iOS calls this extension when a registered schedule starts or ends.
 import DeviceActivity
 
+// Foundation gives us Date for recording when a usage limit was reached.
+import Foundation
+
 // ManagedSettings gives us ManagedSettingsStore.
 // That store is how we apply or remove shields.
 import ManagedSettings
@@ -37,6 +40,9 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         // Let Apple's base class do any default work first.
         super.intervalDidStart(for: activity)
 
+        // Usage-limit rules reset when their daily monitoring interval starts.
+        clearExpiredUsageLimitStateIfNeeded()
+
         // Recompute which apps should be blocked right now.
         refreshShields()
     }
@@ -62,6 +68,20 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         refreshShields()
     }
 
+    // iOS calls this when a monitored usage-limit event reaches its threshold.
+    //
+    // Example:
+    // Rule allows 30 minutes of Instagram today.
+    // Once iOS counts 30 minutes of selected activity, this method fires.
+    override func eventDidReachThreshold(_ event: DeviceActivityEvent.Name, activity: DeviceActivityName) {
+        FocusLockDiagnostics.record("DeviceActivityMonitor eventDidReachThreshold fired for event=\(event.rawValue), activity=\(activity.rawValue).")
+
+        super.eventDidReachThreshold(event, activity: activity)
+
+        markUsageLimitReachedIfNeeded(for: event)
+        refreshShields()
+    }
+
     // Shared helper used by both intervalDidStart and intervalDidEnd.
     private func refreshShields() {
         let appGroupAvailable = FocusLockDiagnostics.appGroupContainerURL() != nil
@@ -71,7 +91,7 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         //
         // This works while the app is closed because the extension can read the same
         // shared App Group storage.
-        let rules = FocusLockRuleStore.loadRules()
+        let rules = cleanedRulesFromStorage()
         FocusLockDiagnostics.record("DeviceActivityMonitor loaded \(rules.count) rule(s).")
 
         // Ask the shared schedule helper which app tokens should be blocked at this moment.
@@ -103,6 +123,52 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
 
         // Record whether the monitor cleared every shield or applied at least one shield.
         FocusLockDiagnostics.record(hasActiveShields ? "DeviceActivityMonitor applied shields." : "DeviceActivityMonitor cleared shields.")
+    }
+
+    // Loads rules and clears stale usage-limit reached state before using them.
+    private func cleanedRulesFromStorage() -> [Rule] {
+        let rules = FocusLockRuleStore.loadRules()
+        let cleanedRules = FocusLockSchedule.clearingExpiredUsageLimitState(from: rules)
+
+        let didClearAnyUsageLimitState = zip(rules, cleanedRules).contains { oldRule, newRule in
+            oldRule.usageLimitReachedAt != newRule.usageLimitReachedAt
+        }
+
+        if didClearAnyUsageLimitState {
+            FocusLockRuleStore.saveRules(cleanedRules)
+            FocusLockDiagnostics.record("DeviceActivityMonitor cleared expired usage-limit state while loading rules.")
+        }
+
+        return cleanedRules
+    }
+
+    // Clears yesterday's reached flags so usage-limit rules reset for the new day.
+    private func clearExpiredUsageLimitStateIfNeeded() {
+        _ = cleanedRulesFromStorage()
+    }
+
+    // Marks a usage-limit rule as reached after iOS fires its threshold event.
+    private func markUsageLimitReachedIfNeeded(for event: DeviceActivityEvent.Name) {
+        guard let reachedRuleID = event.focusLockUsageLimitRuleID else {
+            FocusLockDiagnostics.record("DeviceActivityMonitor ignored non-Focus-Lock threshold event \(event.rawValue).")
+            return
+        }
+
+        var rules = FocusLockRuleStore.loadRules()
+
+        guard let index = rules.firstIndex(where: { $0.id == reachedRuleID }) else {
+            FocusLockDiagnostics.record("DeviceActivityMonitor found no saved rule for threshold event \(event.rawValue).")
+            return
+        }
+
+        guard rules[index].ruleKind == .usageLimit else {
+            FocusLockDiagnostics.record("DeviceActivityMonitor ignored threshold event for non-usage-limit rule \(rules[index].id).")
+            return
+        }
+
+        rules[index].usageLimitReachedAt = Date()
+        FocusLockRuleStore.saveRules(rules)
+        FocusLockDiagnostics.record("DeviceActivityMonitor marked usage-limit rule \(rules[index].id) as reached.")
     }
     
     // Deletes a one-time rule after iOS tells us its interval ended.

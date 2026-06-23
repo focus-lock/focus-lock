@@ -54,6 +54,25 @@ final class AppState: ObservableObject {
         // Note: saving, schedule registration, and shield refresh happen automatically
         // because of 'didSet' on the 'rules' variable.
     }
+
+    // Creates a daily usage-limit rule.
+    //
+    // Example:
+    // "Allow 30 minutes of Instagram today, then block it until tomorrow."
+    func addUsageLimitRule(title: String,
+                           usageLimitMinutes: Int,
+                           activitySelection: FamilyActivitySelection) {
+        let newRule = Rule(
+            title: title,
+            isEnabled: true,
+            ruleKind: .usageLimit,
+            activitySelection: activitySelection,
+            usageLimitMinutes: usageLimitMinutes,
+            usageLimitReachedAt: nil
+        )
+
+        rules.append(newRule)
+    }
     
     func toggleRule(id: UUID) {
         guard let index = rules.firstIndex(where: { $0.id == id }) else {
@@ -106,15 +125,22 @@ final class AppState: ObservableObject {
         
         // Removes one-time rules that have already completed.
         let activeRules = savedRules.filter { !FocusLockSchedule.isCompletedOneTimeRule($0) }
+
+        // Clears usage-limit reached state from previous days.
+        let cleanedRules = FocusLockSchedule.clearingExpiredUsageLimitState(from: activeRules)
         
         // Checks whether any completed one-time rules were removed.
-        if activeRules.count != savedRules.count {
+        let didCleanUsageLimitState = zip(activeRules, cleanedRules).contains { oldRule, newRule in
+            oldRule.usageLimitReachedAt != newRule.usageLimitReachedAt
+        }
+
+        if activeRules.count != savedRules.count || didCleanUsageLimitState {
             // Saves the cleaned rule list back to App Group storage.
-            FocusLockRuleStore.saveRules(activeRules)
+            FocusLockRuleStore.saveRules(cleanedRules)
         }
         
         // Gives callers the cleaned list of rules.
-        return activeRules
+        return cleanedRules
     }
     
     func deleteRule(id:UUID){
@@ -152,6 +178,9 @@ final class AppState: ObservableObject {
         // Replace the old title with the new title from the edit form.
             rules[index].title = title
 
+            // Make sure this rule uses scheduled time-window behavior.
+            rules[index].ruleKind = .scheduled
+
             // Replace the old start time with the new start time from the edit form.
             rules[index].startTime = start
 
@@ -167,8 +196,43 @@ final class AppState: ObservableObject {
             // Replace the old one-time date with the new one-time date from the edit form.
             rules[index].oneTimeDate = savedOneTimeDate
 
+            // Scheduled rules do not use daily usage-limit state.
+            rules[index].usageLimitMinutes = nil
+            rules[index].usageLimitReachedAt = nil
+
             // Because rules is @Published and has didSet, changing this rule automatically saves and syncs it.
         
+    }
+
+    // Updates an existing daily usage-limit rule.
+    func editUsageLimitRule(id: UUID,
+                            title: String,
+                            usageLimitMinutes: Int,
+                            activitySelection: FamilyActivitySelection) {
+        guard let index = rules.firstIndex(where: { $0.id == id }) else {
+            return
+        }
+
+        rules[index].title = title
+        rules[index].ruleKind = .usageLimit
+        rules[index].activitySelection = activitySelection
+        rules[index].usageLimitMinutes = usageLimitMinutes
+
+        // If the user changes the allowed time or selected apps, let the rule start fresh.
+        rules[index].usageLimitReachedAt = nil
+    }
+
+    // Manually blocks a usage-limit rule for the rest of today.
+    //
+    // This is useful when the user knows they already used too much time before
+    // Focus Lock started monitoring this rule.
+    func blockUsageLimitRuleForToday(id: UUID) {
+        guard let index = rules.firstIndex(where: { $0.id == id }),
+              rules[index].ruleKind == .usageLimit else {
+            return
+        }
+
+        rules[index].usageLimitReachedAt = Date()
     }
 
     private func persistAndSyncRules() {
