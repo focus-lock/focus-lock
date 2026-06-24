@@ -73,6 +73,36 @@ final class AppState: ObservableObject {
 
         rules.append(newRule)
     }
+
+    // Starts an immediate one-time focus session from the Home screen.
+    //
+    // This intentionally reuses the existing scheduled rule model instead of adding
+    // a separate session type. That means the same persistence, DeviceActivity
+    // registration, immediate shield sync, and completed one-time cleanup all apply.
+    func startQuickFocusSession(durationMinutes: Int,
+                                activitySelection: FamilyActivitySelection,
+                                now: Date = Date()) {
+        guard durationMinutes >= FocusLockSchedule.minimumMonitorDurationMinutes else {
+            return
+        }
+
+        guard let endTime = Calendar.current.date(byAdding: .minute, value: durationMinutes, to: now) else {
+            return
+        }
+
+        let quickFocusRule = Rule(
+            title: "Quick Focus",
+            isEnabled: true,
+            ruleKind: .scheduled,
+            startTime: now,
+            endTime: endTime,
+            activitySelection: activitySelection,
+            repeatWeekdays: [],
+            oneTimeDate: now
+        )
+
+        rules.append(quickFocusRule)
+    }
     
     func toggleRule(id: UUID) {
         guard let index = rules.firstIndex(where: { $0.id == id }) else {
