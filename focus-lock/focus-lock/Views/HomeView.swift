@@ -26,6 +26,12 @@ struct HomeView: View {
     // When this becomes true, SwiftUI presents the sheet attached below.
     @State private var showCreateSheet = false
 
+    // Controls whether the quick focus sheet is open.
+    //
+    // Quick focus starts a one-time rule immediately instead of making the
+    // user build a permanent schedule first.
+    @State private var showQuickFocusSheet = false
+
     var body: some View {
         // TimelineView refreshes the dashboard every 60 seconds.
         //
@@ -45,7 +51,7 @@ struct HomeView: View {
                     // The big top status card: active now, next scheduled, or no active block.
                     protectionStatusSection(now: timeline.date)
 
-                    // Main action button for creating a new blocking rule.
+                    // Main actions for starting protection or creating a reusable rule.
                     primaryAction
 
                     // Small stat tiles based on saved rules.
@@ -68,6 +74,9 @@ struct HomeView: View {
             // Presents the existing CreateRuleView when the primary button sets showCreateSheet = true.
             .sheet(isPresented: $showCreateSheet) {
                 CreateRuleView()
+            }
+            .sheet(isPresented: $showQuickFocusSheet) {
+                QuickFocusView()
             }
         }
     }
@@ -141,23 +150,35 @@ struct HomeView: View {
 
     // MARK: - Primary Action
 
-    // The main Home action.
+    // The main Home actions.
     //
-    // MVP 1 should make the user's next step obvious, and right now that step is creating a rule.
+    // Start Focus is the fastest path to immediate protection. Create Rule remains
+    // available for reusable schedules and daily usage limits.
     private var primaryAction: some View {
-        Button {
-            // Tells SwiftUI to present CreateRuleView as a sheet.
-            showCreateSheet = true
-        } label: {
-            // Label combines an SF Symbol with text.
-            // This is more scannable than text alone.
-            Label("Create Rule", systemImage: "plus.circle.fill")
-                .font(.headline)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
+        VStack(spacing: 10) {
+            Button {
+                showQuickFocusSheet = true
+            } label: {
+                Label("Start Focus", systemImage: "bolt.fill")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+
+            Button {
+                // Tells SwiftUI to present CreateRuleView as a sheet.
+                showCreateSheet = true
+            } label: {
+                Label("Create Rule", systemImage: "plus.circle.fill")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.large)
         }
-        .buttonStyle(.borderedProminent)
-        .controlSize(.large)
     }
 
     // MARK: - Today Summary
