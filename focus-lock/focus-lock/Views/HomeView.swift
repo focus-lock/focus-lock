@@ -20,6 +20,7 @@ struct HomeView: View {
     // focus_lockApp creates AppState once and injects it into the view tree.
     // HomeView reads it here so the dashboard can be based on real rules instead of fake stats.
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject private var familyControlsManager: FamilyControlsManager
 
     // Controls whether the CreateRuleView sheet is open.
     //
@@ -48,6 +49,10 @@ struct HomeView: View {
                     // Date + "Focus dashboard" title.
                     header
 
+                    if !familyControlsManager.hasScreenTimePermission {
+                        ScreenTimePermissionNotice()
+                    }
+
                     // The big top status card: active now, next scheduled, or no active block.
                     protectionStatusSection(now: timeline.date)
 
@@ -60,7 +65,7 @@ struct HomeView: View {
                     // Shows the next rule that will start in the future, if one exists.
                     nextRuleSection(now: timeline.date)
 
-                    // Placeholder for the future DeviceActivityReport work.
+                    // Links the dashboard to the dedicated Habits tab.
                     habitsSection
                 }
                 .padding(20)
@@ -283,17 +288,16 @@ struct HomeView: View {
 
     // MARK: - Habits Placeholder
 
-    // Placeholder for #41.
-    //
-    // We intentionally do not fake Screen Time data here.
-    // When DeviceActivityReport is implemented, this section can become a real habits preview.
+    // The Home screen intentionally does not duplicate Screen Time report data.
+    // DeviceActivityReport renders inside the Habits tab because iOS keeps that
+    // private activity data inside the report extension.
     private var habitsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             sectionTitle("Habits")
 
             emptyState(
-                title: "Insights coming soon",
-                message: "Device activity reports will show screen habits here once the habits screen is built."
+                title: "View screen habits",
+                message: "Open the Habits tab to see Apple's private Screen Time report for today, this week, or this month."
             )
         }
     }
@@ -556,5 +560,6 @@ private struct UpcomingRule {
     NavigationStack {
         HomeView()
             .environmentObject(AppState())
+            .environmentObject(FamilyControlsManager.shared)
     }
 }

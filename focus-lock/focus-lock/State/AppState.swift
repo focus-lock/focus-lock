@@ -282,39 +282,4 @@ final class AppState: ObservableObject {
         ScreenTimeShieldManager.shared.syncShields(for: rules)
     }
     
-    
-    
-    // MARK: - Stats (data for the Home screen)
-    
-    // Today
-    @Published var moneyLostToday: Double = 15 // Example: dollars lost today
-    @Published var minutesWastedToday: Int = 15 // Example: minutes wasted today
-
-    // This week
-    @Published var moneyLostThisWeek: Double = 100 // Example: dollars lost this week
-    @Published var minutesWastedThisWeek: Int = 35 // Example: minutes wasted this week
-
-    // Lifetime
-    @Published var moneyLostLifetime: Double = 500 // Example: total dollars lost
-    @Published var minutesWastedLifetime: Int = 300 // Example: total minutes wasted (5 hours)
-    
-    
-    // MARK: - Formatting helpers
-
-    // A simple currency formatter to display money values like $15.00
-    private lazy var moneyFormatter: NumberFormatter = {
-        let nf = NumberFormatter()
-        nf.numberStyle = .currency
-        nf.currencyCode = "USD"
-        return nf
-    }()
-    
-    func formattedMoney (_ value: Double) -> String {
-        moneyFormatter.string(from: NSNumber(value: value)) ?? "$\(value)"
-    }
-    
-    var lifetimeHours: Int {
-        minutesWastedLifetime / 60
-    }
-    
 }

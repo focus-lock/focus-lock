@@ -22,6 +22,7 @@ struct focus_lockApp: App {
             ContentView()
                 // Gives every child screen access to the same shared app state.
                 .environmentObject(appState)
+                .environmentObject(familyControlsManager)
             
             // 2. Start the check when the app launches
                 .task {
@@ -37,6 +38,7 @@ struct focus_lockApp: App {
                     
                     // Reload rules in case the DeviceActivity extension deleted a completed one-time rule.
                     appState.refreshRulesFromStorage()
+                    familyControlsManager.refreshAuthorizationStatus()
                 }
             
         }

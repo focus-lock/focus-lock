@@ -16,6 +16,7 @@ struct EditRuleView: View {
 
     // Gets the shared AppState so this screen can save edited rule data.
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject private var familyControlsManager: FamilyControlsManager
 
     // Stores the original rule passed in from RulesView.
     let rule: Rule
@@ -158,6 +159,14 @@ struct EditRuleView: View {
         NavigationStack {
             // Creates an iOS-style form layout for the editable fields.
             Form {
+                if !familyControlsManager.hasScreenTimePermission {
+                    Section {
+                        ScreenTimePermissionNotice()
+                    }
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+                }
+
                 // Groups the rule name field under a Rule Details heading.
                 Section("Rule Details") {
                     // Lets the user change the rule name.

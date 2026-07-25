@@ -128,6 +128,12 @@ Protects us from fooling ourselves.
 
 Screen Time behavior needs real-device testing. The checklist should cover authorization, app/category/website selection, schedule enforcement, closed-app behavior, overlapping rules, uninstall/reinstall expectations, and habits reporting.
 
+Checklist artifact:
+
+```text
+docs/mvp-real-device-qa-checklist.md
+```
+
 ### #44 Redesign Home As Focus Dashboard
 
 Turns Home into the main product surface.

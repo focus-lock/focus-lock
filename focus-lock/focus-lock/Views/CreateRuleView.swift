@@ -11,6 +11,7 @@ import FamilyControls
 struct CreateRuleView: View {
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject private var familyControlsManager: FamilyControlsManager
 
     @State private var ruleName = ""
     @State private var ruleKind: RuleKind = .scheduled
@@ -92,6 +93,14 @@ struct CreateRuleView: View {
     var body: some View {
         NavigationStack {
             Form {
+                if !familyControlsManager.hasScreenTimePermission {
+                    Section {
+                        ScreenTimePermissionNotice()
+                    }
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+                }
+
                 Section("Rule Details") {
                     TextField("Rule Name", text: $ruleName)
 
