@@ -308,6 +308,16 @@ struct RulesView: View {
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
 
+                                if let commitmentCents = rule.simulatedCommitmentCents,
+                                   commitmentCents > 0 {
+                                    Label(
+                                        "\(SimulatedCommitment.formatted(cents: commitmentCents)) simulated commitment",
+                                        systemImage: "banknote"
+                                    )
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(.orange)
+                                }
+
                                 if shouldShowBlockForTodayButton(for: rule, now: timeline.date) {
                                     Button {
                                         appState.blockUsageLimitRuleForToday(id: rule.id)

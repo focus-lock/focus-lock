@@ -24,6 +24,8 @@ struct CreateRuleView: View {
     @State private var repeatWeekdays = Rule.allWeekdays
     // Stores the calendar date used when no repeat weekdays are selected.
     @State private var oneTimeDate = Date()
+    // Zero means the user chose no simulated commitment.
+    @State private var simulatedCommitmentCents = 0
 
     @State private var activitySelection = FamilyActivitySelection()
     @State private var showAppPicker = false
@@ -180,6 +182,8 @@ struct CreateRuleView: View {
                         }
                     }
                 }
+
+                SimulatedCommitmentSection(selectedCents: $simulatedCommitmentCents)
             }
             .navigationTitle(Text("New Rule"))
             .toolbar {
@@ -200,7 +204,8 @@ struct CreateRuleView: View {
                             appState.addUsageLimitRule(
                                 title: ruleName,
                                 usageLimitMinutes: usageLimitMinutes,
-                                activitySelection: activitySelection
+                                activitySelection: activitySelection,
+                                simulatedCommitmentCents: SimulatedCommitment.storedCents(from: simulatedCommitmentCents)
                             )
 
                             dismiss()
@@ -215,6 +220,7 @@ struct CreateRuleView: View {
                                 startTime: startTime,
                                 endTime: endTime,
                                 activitySelection: activitySelection,
+                                simulatedCommitmentCents: SimulatedCommitment.storedCents(from: simulatedCommitmentCents),
                                 // Stores the selected repeat weekdays on the draft rule.
                                 repeatWeekdays: repeatWeekdays,
                                 // Stores a date only when this is a one-time rule.
@@ -241,6 +247,7 @@ struct CreateRuleView: View {
                             start: startTime,
                             end: endTime,
                             activitySelection: activitySelection,
+                            simulatedCommitmentCents: SimulatedCommitment.storedCents(from: simulatedCommitmentCents),
                             // Sends the selected repeat weekdays to AppState.
                             repeatWeekdays: repeatWeekdays,
                             // Sends a one-time date only when no weekdays are selected.

@@ -13,6 +13,7 @@ struct QuickFocusView: View {
 
     @State private var selectedDurationMinutes = 30
     @State private var activitySelection = FamilyActivitySelection()
+    @State private var simulatedCommitmentCents = 0
     @State private var showAppPicker = false
 
     private let durationOptions = [
@@ -83,6 +84,8 @@ struct QuickFocusView: View {
                         }
                     }
                 }
+
+                SimulatedCommitmentSection(selectedCents: $simulatedCommitmentCents)
             }
             .navigationTitle("Start Focus")
             .navigationBarTitleDisplayMode(.inline)
@@ -97,7 +100,8 @@ struct QuickFocusView: View {
                     Button("Start") {
                         appState.startQuickFocusSession(
                             durationMinutes: selectedDurationMinutes,
-                            activitySelection: activitySelection
+                            activitySelection: activitySelection,
+                            simulatedCommitmentCents: SimulatedCommitment.storedCents(from: simulatedCommitmentCents)
                         )
                         dismiss()
                     }
