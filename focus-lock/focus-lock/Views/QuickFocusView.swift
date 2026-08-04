@@ -9,6 +9,7 @@ import SwiftUI
 struct QuickFocusView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var appState: AppState
+    @EnvironmentObject private var familyControlsManager: FamilyControlsManager
 
     @State private var selectedDurationMinutes = 30
     @State private var activitySelection = FamilyActivitySelection()
@@ -46,6 +47,14 @@ struct QuickFocusView: View {
     var body: some View {
         NavigationStack {
             Form {
+                if !familyControlsManager.hasScreenTimePermission {
+                    Section {
+                        ScreenTimePermissionNotice()
+                    }
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+                }
+
                 Section {
                     Picker("Duration", selection: $selectedDurationMinutes) {
                         ForEach(durationOptions) { option in
@@ -115,4 +124,5 @@ private struct QuickFocusDuration: Identifiable {
 #Preview {
     QuickFocusView()
         .environmentObject(AppState())
+        .environmentObject(FamilyControlsManager.shared)
 }

@@ -198,6 +198,7 @@ struct RulesView: View {
     }
     
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject private var familyControlsManager: FamilyControlsManager
     
     var body: some View {
         VStack(alignment: .leading, spacing: 50) {
@@ -205,7 +206,9 @@ struct RulesView: View {
                 .font(.title)
                 .frame(maxWidth: .infinity, alignment: .center)
             
-            
+            if !familyControlsManager.hasScreenTimePermission {
+                ScreenTimePermissionNotice()
+            }
             
             FocusCompactButton(title: "Create Rule"){
                 // flipping this to true.
@@ -229,13 +232,15 @@ struct RulesView: View {
             TimelineView(.periodic(from: Date(), by: 1)) { timeline in
                 ScrollView(.vertical, showsIndicators: false) {
                     LazyVStack(alignment:.leading, spacing: 16) {
-        
-                        // Shows rules in status order instead of raw saved order.
-                        //
-                        // Active rules move to the top. Scheduled rules move to the bottom.
-                        // When a recurring active rule ends, the next timeline tick recalculates
-                        // its status as scheduled and moves it down.
-                        ForEach(sortedRules(now: timeline.date)){ rule in
+                        if appState.rules.isEmpty {
+                            emptyRulesState
+                        } else {
+                            // Shows rules in status order instead of raw saved order.
+                            //
+                            // Active rules move to the top. Scheduled rules move to the bottom.
+                            // When a recurring active rule ends, the next timeline tick recalculates
+                            // its status as scheduled and moves it down.
+                            ForEach(sortedRules(now: timeline.date)){ rule in
                             // Calculate the status once per row so the badge, text, border,
                             // glow, and sorting all describe the same state.
                             let status = ruleDisplayStatus(for: rule, now: timeline.date)
@@ -326,6 +331,7 @@ struct RulesView: View {
                             // Adds the green/orange glow for active and scheduled rules.
                             .shadow(color: status.glowColor?.opacity(0.32) ?? .clear, radius: 12, x: 0, y: 0)
                             .shadow(color: status.glowColor?.opacity(0.18) ?? .clear, radius: 22, x: 0, y: 0)
+                            }
                         }
                     }
                     // Animates row movement when a status change changes the sorted order.
@@ -349,6 +355,34 @@ struct RulesView: View {
             BlockedView()
         }
         */
+    }
+
+    private var emptyRulesState: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Image(systemName: "shield")
+                .font(.title2.weight(.semibold))
+                .foregroundStyle(.secondary)
+
+            Text("No rules yet")
+                .font(.title3.bold())
+
+            Text("Create a schedule, daily limit, or quick focus session to start blocking distracting apps.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Button {
+                showCreateSheet = true
+            } label: {
+                Label("Create Rule", systemImage: "plus.circle.fill")
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.small)
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 
     // Builds the compact colored status pill shown under the rule title.
