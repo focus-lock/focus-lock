@@ -25,6 +25,8 @@ As of PR #35, the app has:
 - a long-form learning doc at `docs/device-activity-enforcement-deep-dive.md`
 - an MVP 1 product vision doc at `docs/mvp-1-vision.md`
 - Screen Time habits reporting through `FocusLockDeviceActivityReport`
+- optional local-only simulated commitments on rules and Quick Focus
+- confirmation guardrails for changing active simulated commitments
 
 The branch that introduced the DeviceActivity enforcement context was:
 
@@ -136,6 +138,9 @@ focus-lock/Shared/FocusLockConfiguration.swift
 
 focus-lock/Shared/FocusLockDiagnostics.swift
   Temporary diagnostics helper, off by default.
+
+focus-lock/Shared/CommitmentOutcome.swift
+  Stores local outcomes for committed one-time rules in the App Group.
 ```
 
 ## Signing and Local Config
@@ -310,7 +315,7 @@ This file can contain both real project structure changes and accidental local s
 ## Current Open Follow-ups
 
 ```text
-#33 Add UI validation for DeviceActivity minimum rule duration
+#65 Track local outcomes for one-time simulated commitments
 ```
 
 Likely future tickets:

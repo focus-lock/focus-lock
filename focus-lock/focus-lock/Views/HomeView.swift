@@ -62,6 +62,9 @@ struct HomeView: View {
                     // Small stat tiles based on saved rules.
                     todaySummarySection(now: timeline.date)
 
+                    // Shows recent local results for committed one-time sessions.
+                    commitmentHistorySection
+
                     // Shows the next rule that will start in the future, if one exists.
                     nextRuleSection(now: timeline.date)
 
@@ -84,6 +87,81 @@ struct HomeView: View {
                 QuickFocusView()
             }
         }
+    }
+
+    // MARK: - Commitment History
+
+    private var commitmentHistorySection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                sectionTitle("Commitments")
+
+                Spacer()
+
+                Text("Simulated only")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.orange)
+            }
+
+            if appState.commitmentOutcomes.isEmpty {
+                emptyState(
+                    title: "No outcomes yet",
+                    message: "Completed or ended-early one-time commitments will appear here. No money is charged."
+                )
+            } else {
+                VStack(spacing: 0) {
+                    ForEach(Array(appState.commitmentOutcomes.prefix(3).enumerated()), id: \.element.id) { index, outcome in
+                        commitmentOutcomeRow(outcome)
+
+                        if index < min(appState.commitmentOutcomes.count, 3) - 1 {
+                            Divider()
+                                .padding(.leading, 42)
+                        }
+                    }
+                }
+                .padding(.horizontal, 16)
+                .background(Color(.secondarySystemGroupedBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+
+                Text("Stored locally for motivation. Focus Lock does not charge you.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private func commitmentOutcomeRow(_ outcome: CommitmentOutcome) -> some View {
+        let completed = outcome.result == .completed
+
+        return HStack(spacing: 12) {
+            Image(systemName: completed ? "checkmark.circle.fill" : "flag.fill")
+                .font(.title3)
+                .foregroundStyle(completed ? Color.green : Color.orange)
+                .frame(width: 28)
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(outcome.ruleTitle)
+                    .font(.subheadline.weight(.semibold))
+                    .lineLimit(1)
+
+                Text(outcome.occurredAt, format: .dateTime.month(.abbreviated).day().hour().minute())
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer(minLength: 8)
+
+            VStack(alignment: .trailing, spacing: 3) {
+                Text(completed ? "Completed" : "Ended early")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(completed ? Color.green : Color.orange)
+
+                Text(SimulatedCommitment.formatted(cents: outcome.simulatedCommitmentCents))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 12)
     }
 
     // MARK: - Top Header
