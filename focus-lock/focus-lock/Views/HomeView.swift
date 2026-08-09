@@ -124,6 +124,10 @@ struct HomeView: View {
         // Find the soonest future rule start.
         let nextRule = nextUpcomingRule(now: now)
 
+        // Show the total commitment for active rules, or the upcoming rule's
+        // commitment when nothing is active.
+        let commitmentCents = statusCommitmentCents(activeRules: activeRules, nextRule: nextRule)
+
         return VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .top, spacing: 14) {
                 // Use a filled lock shield when protection is active.
@@ -145,6 +149,15 @@ struct HomeView: View {
                         // Allows the text to wrap vertically instead of being squeezed or clipped.
                         .fixedSize(horizontal: false, vertical: true)
                 }
+            }
+
+            if let commitmentCents {
+                Label(
+                    "\(SimulatedCommitment.formatted(cents: commitmentCents)) simulated commitment",
+                    systemImage: "banknote"
+                )
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.orange)
             }
         }
         .padding(18)
@@ -268,6 +281,16 @@ struct HomeView: View {
                     Text(FocusLockSchedule.recurrenceSummary(for: nextRule.rule))
                         .font(.caption)
                         .foregroundStyle(.secondary)
+
+                    if let commitmentCents = nextRule.rule.simulatedCommitmentCents,
+                       commitmentCents > 0 {
+                        Label(
+                            "\(SimulatedCommitment.formatted(cents: commitmentCents)) simulated commitment",
+                            systemImage: "banknote"
+                        )
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.orange)
+                    }
                 }
                 .padding(16)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -424,6 +447,21 @@ struct HomeView: View {
 
         // No active/upcoming rule.
         return "Create a rule to protect your next focus window."
+    }
+
+    // Returns the amount relevant to the status card without implying that
+    // any real payment exists. Multiple active commitments are added together.
+    private func statusCommitmentCents(activeRules: [Rule], nextRule: UpcomingRule?) -> Int? {
+        if !activeRules.isEmpty {
+            let total = activeRules.compactMap(\.simulatedCommitmentCents).reduce(0, +)
+            return total > 0 ? total : nil
+        }
+
+        guard let cents = nextRule?.rule.simulatedCommitmentCents, cents > 0 else {
+            return nil
+        }
+
+        return cents
     }
 
     // Finds the soonest future rule start.

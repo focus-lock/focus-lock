@@ -74,6 +74,13 @@ struct Rule: Identifiable, Hashable, Codable {
     // If this date is today, the selected apps should stay blocked until the next day
     // unless the user disables the rule.
     var usageLimitReachedAt: Date?
+
+    // An optional, simulated dollar commitment stored as integer cents.
+    //
+    // This is motivational UI only. It does not represent a charge, payment,
+    // authorization, or balance. Keeping cents as an Int avoids floating-point
+    // rounding problems and gives a future payment system a clean migration path.
+    var simulatedCommitmentCents: Int?
     
     // Stores which weekdays this rule repeats on.
         // Swift Calendar weekday numbers are usually:
@@ -130,6 +137,7 @@ struct Rule: Identifiable, Hashable, Codable {
         case activitySelection
         case usageLimitMinutes
         case usageLimitReachedAt
+        case simulatedCommitmentCents
         case repeatWeekdays
         case oneTimeDate
     }
@@ -144,6 +152,7 @@ struct Rule: Identifiable, Hashable, Codable {
          activitySelection: FamilyActivitySelection = FamilyActivitySelection(),
          usageLimitMinutes: Int? = nil,
          usageLimitReachedAt: Date? = nil,
+         simulatedCommitmentCents: Int? = nil,
          repeatWeekdays: Set<Int> = Rule.allWeekdays,
          oneTimeDate: Date? = nil) {
         self.id = id
@@ -156,6 +165,7 @@ struct Rule: Identifiable, Hashable, Codable {
         self.activitySelection = activitySelection
         self.usageLimitMinutes = usageLimitMinutes
         self.usageLimitReachedAt = usageLimitReachedAt
+        self.simulatedCommitmentCents = simulatedCommitmentCents
         self.repeatWeekdays = repeatWeekdays
         self.oneTimeDate = oneTimeDate
     }
@@ -173,6 +183,7 @@ struct Rule: Identifiable, Hashable, Codable {
         activitySelection = try container.decodeIfPresent(FamilyActivitySelection.self, forKey: .activitySelection) ?? FamilyActivitySelection()
         usageLimitMinutes = try container.decodeIfPresent(Int.self, forKey: .usageLimitMinutes)
         usageLimitReachedAt = try container.decodeIfPresent(Date.self, forKey: .usageLimitReachedAt)
+        simulatedCommitmentCents = try container.decodeIfPresent(Int.self, forKey: .simulatedCommitmentCents)
         repeatWeekdays = try container.decodeIfPresent(Set<Int>.self, forKey: .repeatWeekdays) ?? Rule.allWeekdays
         oneTimeDate = try container.decodeIfPresent(Date.self, forKey: .oneTimeDate)
     }

@@ -32,6 +32,7 @@ final class AppState: ObservableObject {
                  start: Date,
                  end: Date,
                  activitySelection: FamilyActivitySelection,
+                 simulatedCommitmentCents: Int? = nil,
                  // Stores the selected repeat days for this new rule.
                  repeatWeekdays: Set<Int> = Rule.allWeekdays,
                  // Stores the date for this rule when it is a one-time rule.
@@ -45,6 +46,7 @@ final class AppState: ObservableObject {
             startTime: start,
             endTime: end,
             activitySelection: activitySelection,
+            simulatedCommitmentCents: normalizedSimulatedCommitment(simulatedCommitmentCents),
             // Saves the repeat days chosen by the user.
             repeatWeekdays: repeatWeekdays,
             // Saves the one-time date only when this is a one-time rule.
@@ -61,14 +63,16 @@ final class AppState: ObservableObject {
     // "Allow 30 minutes of Instagram today, then block it until tomorrow."
     func addUsageLimitRule(title: String,
                            usageLimitMinutes: Int,
-                           activitySelection: FamilyActivitySelection) {
+                           activitySelection: FamilyActivitySelection,
+                           simulatedCommitmentCents: Int? = nil) {
         let newRule = Rule(
             title: title,
             isEnabled: true,
             ruleKind: .usageLimit,
             activitySelection: activitySelection,
             usageLimitMinutes: usageLimitMinutes,
-            usageLimitReachedAt: nil
+            usageLimitReachedAt: nil,
+            simulatedCommitmentCents: normalizedSimulatedCommitment(simulatedCommitmentCents)
         )
 
         rules.append(newRule)
@@ -81,6 +85,7 @@ final class AppState: ObservableObject {
     // registration, immediate shield sync, and completed one-time cleanup all apply.
     func startQuickFocusSession(durationMinutes: Int,
                                 activitySelection: FamilyActivitySelection,
+                                simulatedCommitmentCents: Int? = nil,
                                 now: Date = Date()) {
         guard durationMinutes >= FocusLockSchedule.minimumMonitorDurationMinutes else {
             return
@@ -97,6 +102,7 @@ final class AppState: ObservableObject {
             startTime: now,
             endTime: endTime,
             activitySelection: activitySelection,
+            simulatedCommitmentCents: normalizedSimulatedCommitment(simulatedCommitmentCents),
             repeatWeekdays: [],
             oneTimeDate: now
         )
@@ -192,6 +198,7 @@ final class AppState: ObservableObject {
                   start: Date,
                   end: Date,
                   activitySelection: FamilyActivitySelection,
+                  simulatedCommitmentCents: Int? = nil,
                   // Stores the updated repeat days for this rule.
                   repeatWeekdays: Set<Int> = Rule.allWeekdays,
                   // Stores the updated date when this rule is one-time.
@@ -219,6 +226,9 @@ final class AppState: ObservableObject {
 
             // Replace the old Screen Time app/category selection with the new selection from the edit form.
             rules[index].activitySelection = activitySelection
+
+            // Save the optional simulated commitment selected in the edit form.
+            rules[index].simulatedCommitmentCents = normalizedSimulatedCommitment(simulatedCommitmentCents)
         
             // Replace the old repeat days with the new repeat days from the edit form.
             rules[index].repeatWeekdays = repeatWeekdays
@@ -238,7 +248,8 @@ final class AppState: ObservableObject {
     func editUsageLimitRule(id: UUID,
                             title: String,
                             usageLimitMinutes: Int,
-                            activitySelection: FamilyActivitySelection) {
+                            activitySelection: FamilyActivitySelection,
+                            simulatedCommitmentCents: Int? = nil) {
         guard let index = rules.firstIndex(where: { $0.id == id }) else {
             return
         }
@@ -247,6 +258,7 @@ final class AppState: ObservableObject {
         rules[index].ruleKind = .usageLimit
         rules[index].activitySelection = activitySelection
         rules[index].usageLimitMinutes = usageLimitMinutes
+        rules[index].simulatedCommitmentCents = normalizedSimulatedCommitment(simulatedCommitmentCents)
 
         // If the user changes the allowed time or selected apps, let the rule start fresh.
         rules[index].usageLimitReachedAt = nil
@@ -263,6 +275,17 @@ final class AppState: ObservableObject {
         }
 
         rules[index].usageLimitReachedAt = Date()
+    }
+
+    // Treat zero and negative values as no commitment before writing a Rule.
+    // The UI currently offers only known positive presets, but this keeps the
+    // model safe if custom amounts are added later.
+    private func normalizedSimulatedCommitment(_ cents: Int?) -> Int? {
+        guard let cents, cents > 0 else {
+            return nil
+        }
+
+        return cents
     }
 
     private func persistAndSyncRules() {

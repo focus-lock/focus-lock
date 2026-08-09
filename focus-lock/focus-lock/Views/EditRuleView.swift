@@ -51,6 +51,9 @@ struct EditRuleView: View {
     // Tracks whether the custom duration control is active.
     @State private var isUsingCustomUsageLimit: Bool
 
+    // Stores the editable simulated commitment. Zero means none.
+    @State private var simulatedCommitmentCents: Int
+
     // Tracks whether Apple's Screen Time picker should be visible.
     @State private var showAppPicker = false
     
@@ -151,6 +154,7 @@ struct EditRuleView: View {
         _selectedUsageLimitMinutes = State(initialValue: presetUsageLimitMinutes)
         _customUsageLimitMinutes = State(initialValue: max(savedUsageLimitMinutes, FocusLockSchedule.minimumMonitorDurationMinutes))
         _isUsingCustomUsageLimit = State(initialValue: ![15, 30, 60].contains(savedUsageLimitMinutes))
+        _simulatedCommitmentCents = State(initialValue: rule.simulatedCommitmentCents ?? 0)
     }
 
     // Describes the UI that appears inside the edit sheet.
@@ -259,6 +263,8 @@ struct EditRuleView: View {
                         }
                     }
                 }
+
+                SimulatedCommitmentSection(selectedCents: $simulatedCommitmentCents)
             }
 
             // Shows Edit Rule as the sheet title.
@@ -288,7 +294,8 @@ struct EditRuleView: View {
                                 id: rule.id,
                                 title: ruleName,
                                 usageLimitMinutes: usageLimitMinutes,
-                                activitySelection: activitySelection
+                                activitySelection: activitySelection,
+                                simulatedCommitmentCents: SimulatedCommitment.storedCents(from: simulatedCommitmentCents)
                             )
 
                             dismiss()
@@ -305,6 +312,7 @@ struct EditRuleView: View {
                             startTime: startTime,
                             endTime: endTime,
                             activitySelection: activitySelection,
+                            simulatedCommitmentCents: SimulatedCommitment.storedCents(from: simulatedCommitmentCents),
                             // Stores the edited repeat weekdays on the draft rule.
                             repeatWeekdays: repeatWeekdays,
                             // Stores a date only when this is a one-time rule.
@@ -332,6 +340,7 @@ struct EditRuleView: View {
                             start: startTime,
                             end: endTime,
                             activitySelection: activitySelection,
+                            simulatedCommitmentCents: SimulatedCommitment.storedCents(from: simulatedCommitmentCents),
                             // Sends the edited repeat weekdays to AppState.
                             repeatWeekdays: repeatWeekdays,
                             // Sends a one-time date only when no weekdays are selected.
