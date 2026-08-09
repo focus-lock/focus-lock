@@ -497,23 +497,35 @@ struct RulesView: View {
     }
 
     private func performCommitmentAction(_ action: PendingCommitmentAction) {
+        // The session may finish while this alert is open. Re-read the current
+        // rule so a stale confirmation cannot create a false ended-early outcome.
+        guard let currentRule = appState.rules.first(where: { $0.id == action.rule.id }) else {
+            return
+        }
+
+        // Only committed one-time rules create history in this version. The store
+        // safely ignores recurring rules while their per-cycle semantics are undecided.
+        if activeCommitmentCents(for: currentRule, now: Date()) != nil {
+            appState.recordCommitmentEndedEarly(for: currentRule)
+        }
+
         switch action.kind {
         case .disable:
-            guard appState.rules.first(where: { $0.id == action.rule.id })?.isEnabled == true else {
+            guard currentRule.isEnabled else {
                 return
             }
-            appState.toggleRule(id: action.rule.id)
+            appState.toggleRule(id: currentRule.id)
 
         case .edit:
             // Disable first so opening the editor cannot silently change an active
             // commitment. The edited rule remains disabled until the user reenables it.
-            if appState.rules.first(where: { $0.id == action.rule.id })?.isEnabled == true {
-                appState.toggleRule(id: action.rule.id)
+            if currentRule.isEnabled {
+                appState.toggleRule(id: currentRule.id)
             }
-            ruleBeingEdited = appState.rules.first(where: { $0.id == action.rule.id })
+            ruleBeingEdited = appState.rules.first(where: { $0.id == currentRule.id })
 
         case .delete:
-            appState.deleteRule(id: action.rule.id)
+            appState.deleteRule(id: currentRule.id)
         }
     }
 
@@ -672,16 +684,16 @@ struct RulesView: View {
     // up after interval end. This helper keeps the on-screen list from showing a finished
     // one-time rule until the user leaves and reopens the app.
     private func removeCompletedOneTimeRulesIfNeeded(now: Date) {
-        let completedRuleIDs = appState.rules
+        let completedRules = appState.rules
             .filter { FocusLockSchedule.isCompletedOneTimeRule($0, now: now) }
-            .map(\.id)
 
-        guard !completedRuleIDs.isEmpty else {
+        guard !completedRules.isEmpty else {
             return
         }
 
-        for ruleID in completedRuleIDs {
-            appState.deleteRule(id: ruleID)
+        for rule in completedRules {
+            appState.recordCommitmentCompleted(for: rule)
+            appState.deleteRule(id: rule.id)
         }
     }
 

@@ -207,6 +207,10 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             // Stop because deleting early would be confusing and risky.
             return
         }
+
+        // Preserve a small local outcome before deleting the completed rule.
+        // The store ignores unstaked, recurring, and duplicate records.
+        FocusLockCommitmentStore.record(.completed, for: endedRule)
         
         // Build a new rules array without the completed one-time rule.
         let remainingRules = rules.filter { $0.id != endedRuleID }

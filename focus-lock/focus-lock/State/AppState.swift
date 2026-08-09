@@ -23,6 +23,11 @@ final class AppState: ObservableObject {
             persistAndSyncRules()
         }
     }
+
+    // Recent local outcomes for committed one-time rules. The monitor extension
+    // can write this history while the app is closed, so it is refreshed on launch
+    // and whenever the app returns to the foreground.
+    @Published private(set) var commitmentOutcomes: [CommitmentOutcome] = []
     
     // MARK: - Actions
     
@@ -135,6 +140,9 @@ final class AppState: ObservableObject {
         // Load previously saved rules from the shared App Group store.
         rules = loadRules()
 
+        // Load any outcomes written by the DeviceActivity monitor extension.
+        commitmentOutcomes = FocusLockCommitmentStore.loadOutcomes()
+
         // Tell iOS about all enabled schedules again.
         //
         // This is defensive: if the app restarts, we make sure DeviceActivityCenter
@@ -158,6 +166,12 @@ final class AppState: ObservableObject {
     private func loadRules() -> [Rule] {
         // Reads all saved rules from App Group storage.
         let savedRules = FocusLockRuleStore.loadRules()
+
+        // Record successful committed one-time rules before removing them. This
+        // covers cases where the app opens after the end callback was delayed.
+        for rule in savedRules where FocusLockSchedule.isCompletedOneTimeRule(rule) {
+            FocusLockCommitmentStore.record(.completed, for: rule)
+        }
         
         // Removes one-time rules that have already completed.
         let activeRules = savedRules.filter { !FocusLockSchedule.isCompletedOneTimeRule($0) }
@@ -191,6 +205,30 @@ final class AppState: ObservableObject {
     func refreshRulesFromStorage() {
         // Reads the latest saved rules, including changes made by the DeviceActivity extension.
         rules = loadRules()
+        refreshCommitmentOutcomes()
+    }
+
+    // Records the result before an active one-time commitment is disabled,
+    // edited, or deleted through the Rules screen.
+    func recordCommitmentEndedEarly(for rule: Rule) {
+        guard FocusLockCommitmentStore.record(.endedEarly, for: rule) else {
+            return
+        }
+
+        refreshCommitmentOutcomes()
+    }
+
+    // Records normal completion when the Rules screen removes a finished one-time rule.
+    func recordCommitmentCompleted(for rule: Rule) {
+        guard FocusLockCommitmentStore.record(.completed, for: rule) else {
+            return
+        }
+
+        refreshCommitmentOutcomes()
+    }
+
+    func refreshCommitmentOutcomes() {
+        commitmentOutcomes = FocusLockCommitmentStore.loadOutcomes()
     }
     
     func editRule(id: UUID,
