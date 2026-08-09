@@ -14,9 +14,29 @@ struct RulesView: View {
     @State private var showCreateSheet = false
     
     @State private var ruleBeingEdited: Rule?
+
+    // Holds a destructive action while we ask the user whether they really want
+    // to break an active simulated commitment.
+    @State private var pendingCommitmentAction: PendingCommitmentAction?
     
     // Blocked screen shortcut temporarily hidden from the Rules page.
     // @State private var goToBlocked = false
+
+    // The three rule actions that can weaken or end an active commitment.
+    private struct PendingCommitmentAction: Identifiable {
+        enum Kind: String {
+            case disable
+            case edit
+            case delete
+        }
+
+        let rule: Rule
+        let kind: Kind
+
+        var id: String {
+            "\(rule.id.uuidString)-\(kind.rawValue)"
+        }
+    }
 
     // Describes the user-facing state shown on each rule row.
     //
@@ -258,18 +278,19 @@ struct RulesView: View {
 
                                     Spacer()
                                     
-                                    Image(systemName: rule.isEnabled ? "checkmark.circle.fill" : "xmark.circle.fill")
-                                        .foregroundStyle(rule.isEnabled ? .green : .red)
-                                        .font(.title2)
-                                        .onTapGesture {
-                                            // Toggle through AppState so the actual Screen Time shield updates too.
-                                            appState.toggleRule(id: rule.id)
-                                        }
+                                    Button {
+                                        requestToggle(for: rule, now: timeline.date)
+                                    } label: {
+                                        Image(systemName: rule.isEnabled ? "checkmark.circle.fill" : "xmark.circle.fill")
+                                            .foregroundStyle(rule.isEnabled ? .green : .red)
+                                            .font(.title2)
+                                    }
+                                    .buttonStyle(.borderless)
+                                    .accessibilityLabel(rule.isEnabled ? "Disable rule" : "Enable rule")
                                     
                                     //Editing Rule Button
                                     Button(action: {
-                                        //Updated state var with rule that is currently being edited and goes back to .sheet to call EditRuleView
-                                        ruleBeingEdited = rule
+                                        requestEdit(for: rule, now: timeline.date)
                                     }) {
                                         Image(systemName: "pencil")
                                             .foregroundStyle(.blue)
@@ -279,8 +300,7 @@ struct RulesView: View {
                                     
                                     
                                     Button(action:{
-                                        
-                                        appState.deleteRule(id:rule.id)
+                                        requestDelete(for: rule, now: timeline.date)
                                     }){
                                         Image(systemName: "trash")
                                             .foregroundStyle(.red)
@@ -359,7 +379,18 @@ struct RulesView: View {
                 goToBlocked = true
             }
             */
-        }.padding(20)
+        }
+        .padding(20)
+        .alert(item: $pendingCommitmentAction) { action in
+            Alert(
+                title: Text(commitmentAlertTitle(for: action)),
+                message: Text(commitmentAlertMessage(for: action)),
+                primaryButton: .destructive(Text(commitmentConfirmationTitle(for: action))) {
+                    performCommitmentAction(action)
+                },
+                secondaryButton: .cancel()
+            )
+        }
         /*
         .navigationDestination(isPresented: $goToBlocked) {
             BlockedView()
@@ -393,6 +424,97 @@ struct RulesView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(.secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+    }
+
+    // Active commitments get an explicit confirmation before a control can
+    // stop or weaken their current blocking window. Inactive and unstaked rules
+    // keep the existing one-tap behavior.
+    private func requestToggle(for rule: Rule, now: Date) {
+        guard rule.isEnabled, activeCommitmentCents(for: rule, now: now) != nil else {
+            appState.toggleRule(id: rule.id)
+            return
+        }
+
+        pendingCommitmentAction = PendingCommitmentAction(rule: rule, kind: .disable)
+    }
+
+    private func requestEdit(for rule: Rule, now: Date) {
+        guard activeCommitmentCents(for: rule, now: now) != nil else {
+            ruleBeingEdited = rule
+            return
+        }
+
+        pendingCommitmentAction = PendingCommitmentAction(rule: rule, kind: .edit)
+    }
+
+    private func requestDelete(for rule: Rule, now: Date) {
+        guard activeCommitmentCents(for: rule, now: now) != nil else {
+            appState.deleteRule(id: rule.id)
+            return
+        }
+
+        pendingCommitmentAction = PendingCommitmentAction(rule: rule, kind: .delete)
+    }
+
+    // A commitment is guarded only while its rule is genuinely monitorable and
+    // blocking. This avoids warning on disabled, invalid, upcoming, or completed rules.
+    private func activeCommitmentCents(for rule: Rule, now: Date) -> Int? {
+        guard let cents = rule.simulatedCommitmentCents,
+              cents > 0,
+              FocusLockSchedule.isMonitorable(rule, now: now),
+              FocusLockSchedule.isActive(rule, now: now) else {
+            return nil
+        }
+
+        return cents
+    }
+
+    private func commitmentAlertTitle(for action: PendingCommitmentAction) -> String {
+        let cents = action.rule.simulatedCommitmentCents ?? 0
+        return "Break \(SimulatedCommitment.formatted(cents: cents)) simulated commitment?"
+    }
+
+    private func commitmentAlertMessage(for action: PendingCommitmentAction) -> String {
+        switch action.kind {
+        case .disable:
+            return "This rule will stop blocking now. Focus Lock will not charge you."
+        case .edit:
+            return "Editing requires stopping this active rule first. The rule will be disabled before the editor opens. Focus Lock will not charge you."
+        case .delete:
+            return "This active rule will be deleted and stop blocking now. Focus Lock will not charge you."
+        }
+    }
+
+    private func commitmentConfirmationTitle(for action: PendingCommitmentAction) -> String {
+        switch action.kind {
+        case .disable:
+            return "Disable Rule"
+        case .edit:
+            return "Break & Edit"
+        case .delete:
+            return "Delete Rule"
+        }
+    }
+
+    private func performCommitmentAction(_ action: PendingCommitmentAction) {
+        switch action.kind {
+        case .disable:
+            guard appState.rules.first(where: { $0.id == action.rule.id })?.isEnabled == true else {
+                return
+            }
+            appState.toggleRule(id: action.rule.id)
+
+        case .edit:
+            // Disable first so opening the editor cannot silently change an active
+            // commitment. The edited rule remains disabled until the user reenables it.
+            if appState.rules.first(where: { $0.id == action.rule.id })?.isEnabled == true {
+                appState.toggleRule(id: action.rule.id)
+            }
+            ruleBeingEdited = appState.rules.first(where: { $0.id == action.rule.id })
+
+        case .delete:
+            appState.deleteRule(id: action.rule.id)
+        }
     }
 
     // Builds the compact colored status pill shown under the rule title.
